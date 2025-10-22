@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Input } from '../ui/input';
@@ -37,6 +37,7 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [showAdminSetup, setShowAdminSetup] = useState(false);
+  const hasProcessedLoginRef = useRef(false);
 
   // Update active tab when defaultTab prop changes
   useEffect(() => {
@@ -96,13 +97,12 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
     checkAuthStatus();
 
     // Listen for auth state changes
-    let hasProcessedLogin = false;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('AuthPage: Auth state change detected:', event, session?.user?.email);
+      console.log('AuthPage: Auth state change detected:', event, session?.user?.email, 'hasProcessed:', hasProcessedLoginRef.current);
 
-      if (event === 'SIGNED_IN' && session?.user && !hasProcessedLogin) {
-        console.log('AuthPage: User signed in via auth state change');
-        hasProcessedLogin = true;
+      if (event === 'SIGNED_IN' && session?.user && !hasProcessedLoginRef.current) {
+        console.log('AuthPage: User signed in via auth state change - processing');
+        hasProcessedLoginRef.current = true;
         
         setIsLoading(false);
         setSuccess('Login successful! Redirecting...');

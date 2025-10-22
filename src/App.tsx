@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Header } from './components/layout/Header';
@@ -64,7 +64,7 @@ export default function App() {
   const [count, setCount] = useState(0);
   const [showFull, setShowFull] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Initialize from localStorage if available
   const getInitialProfile = () => {
     try {
@@ -78,15 +78,29 @@ export default function App() {
     }
     return null;
   };
-  
-  const initialPage = window.location.pathname === '/auth' ? 'auth' : 'home';
-  const [navStack, setNavStack] = useState<NavEntry[]>([{ page: initialPage }]);
+
+  // IMPORTANT: Get initial page from URL or default to home
+  const getInitialPage = (): Page => {
+    const pathname = window.location.pathname;
+    if (pathname.includes('/auth')) return 'auth';
+    if (pathname.includes('/admin')) return 'admin';
+    if (pathname.includes('/markets')) return 'markets';
+    if (pathname.includes('/opinion')) return 'opinion';
+    if (pathname.includes('/watchlist')) return 'watchlist';
+    if (pathname.includes('/about')) return 'about';
+    return 'home';
+  };
+
+  const [navStack, setNavStack] = useState<NavEntry[]>([{ page: getInitialPage() }]);
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(getInitialProfile);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Prevent concurrent profile fetches
+  const isCheckingUser = useRef(false);
+
   const currentEntry = navStack[navStack.length - 1];
-  
+
   // Persist userProfile to localStorage whenever it changes
   useEffect(() => {
     if (userProfile) {
@@ -119,11 +133,12 @@ export default function App() {
   // Check for existing session on mount
   useEffect(() => {
     checkUser();
-    
+
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[App] Auth state change:', event, session?.user?.email);
-      
+
+      // IMPORTANT: Only handle specific events to prevent loops
       if (event === 'TOKEN_REFRESHED') {
         console.log('[App] Token refreshed, reloading user data...');
         await checkUser();
@@ -131,8 +146,10 @@ export default function App() {
         console.log('[App] User signed out');
         setUser(null);
         setUserProfile(null);
+      } else if (event === 'SIGNED_IN') {
+        // Do NOT process SIGNED_IN here - it's handled by AuthPage
+        console.log('[App] SIGNED_IN event ignored - handled by AuthPage');
       }
-      // Note: SIGNED_IN is handled by AuthPage calling handleAuthSuccess
     });
 
     return () => {
@@ -141,17 +158,25 @@ export default function App() {
   }, []);
 
   const checkUser = async () => {
+    // Prevent concurrent calls
+    if (isCheckingUser.current) {
+      console.log('[checkUser] Already checking user, skipping');
+      return;
+    }
+
+    isCheckingUser.current = true;
     console.log('[checkUser] Starting');
+
     try {
       // Get session directly
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError) {
         console.error('[checkUser] Session error:', sessionError);
         setAuthLoading(false);
         return;
       }
-      
+
       if (!session?.user) {
         console.log('[checkUser] No session found');
         setUser(null);
@@ -159,10 +184,10 @@ export default function App() {
         setAuthLoading(false);
         return;
       }
-      
+
       console.log('[checkUser] Session found for:', session.user.email);
       setUser(session.user);
-      
+
       // Try to get profile from database
       console.log('[checkUser] Querying database for auth_id:', session.user.id);
       const { data: dbProfile, error: profileError } = await supabase
@@ -170,11 +195,11 @@ export default function App() {
         .select('*')
         .eq('auth_id', session.user.id)
         .maybeSingle();
-      
+
       if (profileError) {
         console.error('[checkUser] Profile query error:', profileError);
       }
-      
+
       if (dbProfile) {
         console.log('[checkUser] Database profile found:', {
           name: dbProfile.name,
@@ -184,7 +209,7 @@ export default function App() {
       } else {
         console.log('[checkUser] No database profile found, creating temporary');
       }
-      
+
       // Use database profile or create temporary one
       const profile = dbProfile || {
         id: session.user.id,
@@ -193,23 +218,24 @@ export default function App() {
         name: session.user.email?.split('@')[0] || 'User',
         role: 'Student'
       };
-      
+
       console.log('[checkUser] Setting profile with role:', profile.role);
       setUserProfile(profile);
-      
+
     } catch (error) {
       console.error('[checkUser] Fatal error:', error);
     } finally {
       setAuthLoading(false);
+      isCheckingUser.current = false;
     }
   };
 
   const loadUserProfile = async (authId: string) => {
     console.log('[loadUserProfile] Called with authId:', authId);
-    
+
     // Just call checkUser which does everything we need
     await checkUser();
-    
+
     console.log('[loadUserProfile] Completed');
   };
 
@@ -235,7 +261,7 @@ export default function App() {
     try {
       const { error } = await authHelpers.signOut();
       if (error) throw error;
-      
+
       setUser(null);
       setUserProfile(null);
       toast.success('Logged out successfully');
@@ -248,18 +274,25 @@ export default function App() {
 
   const handleAuthSuccess = async (authUser: any) => {
     console.log('[handleAuthSuccess] User logged in:', authUser.email);
-    
+
+    // IMPORTANT: Prevent multiple calls
+    if (currentEntry.page === 'home') {
+      console.log('[handleAuthSuccess] Already on home page, skipping');
+      return;
+    }
+
     // Set user immediately
     setUser(authUser);
-    
+
     // Load full profile from database BEFORE navigating
     console.log('[handleAuthSuccess] Loading full profile from database');
     await checkUser();
-    
+
     // Navigate after profile is loaded
     console.log('[handleAuthSuccess] Profile loaded, navigating to home');
     handleNavigate('home');
-    
+
+    // Show success message only once
     toast.success('Welcome to The Mane Review!');
   };
 
@@ -272,7 +305,7 @@ export default function App() {
 
   const handleNavigate = (page: string, data?: NavEntry['data']) => {
     console.log('[App] handleNavigate called with:', page, data);
-    
+
     if (page === 'back') {
       setNavStack(prev => {
         if (prev.length <= 1) {
@@ -292,30 +325,35 @@ export default function App() {
     console.log('[App] Normalized page:', normalized, 'Current page:', currentEntry.page);
 
     setNavStack(prev => {
-      const previous = prev[prev.length - 1];
+      const current = prev[prev.length - 1];
 
-      if (previous.page === normalized) {
-        if (normalized === 'article' && previous.data?.slug !== data?.slug) {
+      console.log('[App] Navigation check - current:', current.page, 'target:', normalized);
+
+      // If we're already on the target page
+      if (current.page === normalized) {
+        // Special cases where we update even on same page
+        if (normalized === 'article' && current.data?.slug !== data?.slug) {
+          console.log('[App] Different article, navigating');
           return [...prev, nextEntry];
         }
-        if (normalized === 'markets' && previous.data?.region !== data?.region) {
+        if (normalized === 'markets' && current.data?.region !== data?.region) {
+          console.log('[App] Different market region, navigating');
           return [...prev, nextEntry];
         }
-        if (normalized === 'auth' && previous.data?.defaultTab !== data?.defaultTab) {
-          // Para auth page, sempre atualiza se a aba mudou
-          console.log('[App] Auth page tab change:', previous.data?.defaultTab, '->', data?.defaultTab);
+        if (normalized === 'auth' && current.data?.defaultTab !== data?.defaultTab) {
+          console.log('[App] Auth page tab change:', current.data?.defaultTab, '->', data?.defaultTab);
           const updated = [...prev];
           updated[updated.length - 1] = nextEntry;
           return updated;
         }
 
-        console.log('[App] Already on page', normalized, '- not updating nav stack');
-        const updated = [...prev];
-        updated[updated.length - 1] = nextEntry;
-        return updated;
+        // If we're on the same page and no data changed, don't update
+        console.log('[App] Already on page', current.page, '- not navigating');
+        return prev;
       }
 
-      console.log('[App] Navigation stack updated, navigating from', previous.page, 'to', normalized);
+      // Different pages - navigate normally
+      console.log('[App] Navigating from', current.page, 'to', normalized);
       return [...prev, nextEntry];
     });
   };
@@ -346,7 +384,7 @@ export default function App() {
         );
       case 'auth':
         return (
-          <AuthPage 
+          <AuthPage
             onAuthSuccess={handleAuthSuccess}
             onNavigate={handleNavigate}
             defaultTab={currentEntry.data?.defaultTab as 'login' | 'signup'}
