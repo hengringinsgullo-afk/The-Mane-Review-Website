@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Auth</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Test Supabase Authentication</h1>
+    <div id="status">Ready to test...</div>
+    <button onclick="testAuth()">Test Login</button>
+    
+    <script>
+        const { createClient } = supabase;
+        
+        // Use the same credentials
+        const supabaseUrl = 'https://dlpfkrqvptlgtampkqvd.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRscGZrcnF2cHRsZ3RhbXBrcXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMzM3MzUsImV4cCI6MjA3MzcwOTczNX0.IuZBEKMBV1lXinuxB31zmNjGa79fsCk5ujFU4VIUfoo';
+        
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        
+        async function testAuth() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = 'Testing authentication...';
+            
+            try {
+                console.log('Starting auth test...');
+                
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: 'henriquegullo@themanereview.com',
+                    password: 'TMRAdmin2025!'
+                });
+                
+                if (error) {
+                    statusDiv.innerHTML = `Error: ${error.message}`;
+                    console.error('Auth error:', error);
+                } else {
+                    statusDiv.innerHTML = `Success! User: ${data.user.email}`;
+                    console.log('Auth success:', data);
+                }
+            } catch (err) {
+                statusDiv.innerHTML = `Exception: ${err.message}`;
+                console.error('Exception:', err);
+            }
+        }
+    </script>
+</body>
+</html>

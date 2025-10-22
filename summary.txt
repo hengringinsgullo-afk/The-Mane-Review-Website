@@ -1,0 +1,7 @@
+Work Summary
+-----------
+- Refactored app navigation to keep the full experience visible while tracking history per page.
+- Tuned the homepage hero logo sizing to match requested proportions.
+- Rebuilt the Opinion page with student intro copy, New Articles grid, and browse-all control.
+- Restructured the Watchlist page into dedicated My Watchlist and Community Watchlist sections with updated messaging.
+- Swapped the header monogram for the hosted logo asset and set the same image as the site favicon.

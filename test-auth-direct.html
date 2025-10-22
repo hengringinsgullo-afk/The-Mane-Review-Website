@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Auth Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Direct Supabase Auth Test</h1>
+    <div id="status">Ready to test...</div>
+    <button onclick="testAuth()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        const supabaseUrl = 'https://dlpfkrqvptlgtampkqvd.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRscGZrcnF2cHRsZ3RhbXBrcXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMzM3MzUsImV4cCI6MjA3MzcwOTczNX0.IuZBEKMBV1lXinuxB31zmNjGa79fsCk5ujFU4VIUfoo';
+        
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        async function testAuth() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('result');
+            
+            statusDiv.innerHTML = 'Testing authentication...';
+            
+            try {
+                const startTime = Date.now();
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'henriquegullo@themanereview.com',
+                    password: 'H3nr1qu3'
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                if (error) {
+                    statusDiv.innerHTML = `Error: ${error.message}`;
+                    resultDiv.innerHTML = `<pre>${JSON.stringify(error, null, 2)}</pre>`;
+                } else {
+                    statusDiv.innerHTML = `Success! Login took ${duration}ms`;
+                    resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (err) {
+                statusDiv.innerHTML = `Exception: ${err.message}`;
+                resultDiv.innerHTML = `<pre>${err.stack}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>

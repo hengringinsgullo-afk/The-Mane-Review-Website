@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Brand Colors - Derived from The Mane Review logos */
+  --gold: #D4AF37;
+  --navy: #1B2951;
+  --ink: #0A0B0D;
+  --paper: #FEFEFE;
+  --slate: #64748B;
+  
+  /* Typography */
+  --font-headline: 'Playfair Display', 'Georgia', serif;
+  --font-body: 'Inter', 'Helvetica Neue', sans-serif;
+  
+  --font-size: 16px;
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--navy);
+  --primary-foreground: var(--paper);
+  --secondary: var(--gold);
+  --secondary-foreground: var(--navy);
+  --muted: #F8F9FA;
+  --muted-foreground: var(--slate);
+  --accent: var(--gold);
+  --accent-foreground: var(--navy);
+  --destructive: #DC2626;
+  --destructive-foreground: var(--paper);
+  --border: rgba(27, 41, 81, 0.1);
+  --input: transparent;
+  --input-background: #F8F9FA;
+  --switch-background: #E5E7EB;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: var(--navy);
+  --chart-1: var(--gold);
+  --chart-2: var(--navy);
+  --chart-3: #10B981;
+  --chart-4: #EF4444;
+  --chart-5: #8B5CF6;
+  --radius: 0.5rem;
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--navy);
+  --sidebar-primary-foreground: var(--paper);
+  --sidebar-accent: #F8F9FA;
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: rgba(27, 41, 81, 0.1);
+  --sidebar-ring: var(--navy);
+}
+
+.dark {
+  --background: var(--ink);
+  --foreground: var(--paper);
+  --card: #111827;
+  --card-foreground: var(--paper);
+  --popover: #111827;
+  --popover-foreground: var(--paper);
+  --primary: var(--gold);
+  --primary-foreground: var(--ink);
+  --secondary: var(--navy);
+  --secondary-foreground: var(--paper);
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: var(--gold);
+  --accent-foreground: var(--ink);
+  --destructive: #EF4444;
+  --destructive-foreground: var(--paper);
+  --border: #374151;
+  --input: #374151;
+  --ring: var(--gold);
+  --chart-1: var(--gold);
+  --chart-2: #60A5FA;
+  --chart-3: #34D399;
+  --chart-4: #F87171;
+  --chart-5: #A78BFA;
+  --sidebar: #111827;
+  --sidebar-foreground: var(--paper);
+  --sidebar-primary: var(--gold);
+  --sidebar-primary-foreground: var(--ink);
+  --sidebar-accent: #1F2937;
+  --sidebar-accent-foreground: var(--paper);
+  --sidebar-border: #374151;
+  --sidebar-ring: var(--gold);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}

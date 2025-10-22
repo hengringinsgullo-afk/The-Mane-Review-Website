@@ -1,0 +1,2 @@
+This file was removed due to webpack compilation errors.
+The earnings functionality will be reimplemented in a future update.

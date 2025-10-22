@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Direct Login</title>
+</head>
+<body>
+    <h1>Test Direct Login - Henri</h1>
+    <button onclick="testLogin()">Test Login (henriquegullo@themanereview.com)</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        const supabase = createClient(
+            'https://dlpfkrqvptlgtampkqvd.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRscGZrcnF2cHRsZ3RhbXBrcXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMzM3MzUsImV4cCI6MjA3MzcwOTczNX0.IuZBEKMBV1lXinuxB31zmNjGa79fsCk5ujFU4VIUfoo'
+        );
+        
+        window.testLogin = async function() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Logging in...';
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'henriquegullo@themanereview.com',
+                    password: 'H3nr1qu3'
+                });
+                
+                if (error) {
+                    result.innerHTML = `Error: ${error.message}`;
+                } else {
+                    result.innerHTML = `Success! User: ${data.user.email}`;
+                    
+                    // Navigate to app after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                }
+            } catch (err) {
+                result.innerHTML = `Exception: ${err.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
