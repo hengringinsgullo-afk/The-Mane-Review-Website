@@ -19,26 +19,16 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [opinionArticles, setOpinionArticles] = useState<Article[]>([]);
 
-  // Load articles from database
   useEffect(() => {
     const loadArticles = async () => {
       try {
-        const { data: dbArticles } = await supabase
-          .from('articles')
-          .select('*')
-          .eq('status', 'published')
-          .order('published_at', { ascending: false });
-
+        const { data: dbArticles } = await supabase.from('articles').select('*').eq('status', 'published').order('published_at', { ascending: false });
         if (dbArticles) {
-          const converted: Article[] = dbArticles.map(article => ({
-            id: article.id, slug: article.slug, title: article.title, excerpt: article.excerpt || '', body: article.body, coverImage: article.cover_image, coverAlt: article.cover_alt, region: article.region as any, category: article.category as any, tags: article.tags, authorId: article.author_id, authorRole: article.author_role as any, status: 'published', publishedAt: new Date(article.published_at), updatedAt: new Date(article.updated_at), featured: article.featured, estReadMin: article.est_read_min, views: article.views
-          }));
+          const converted: Article[] = dbArticles.map(article => ({ id: article.id, slug: article.slug, title: article.title, excerpt: article.excerpt || '', body: article.body, coverImage: article.cover_image, coverAlt: article.cover_alt, region: article.region as any, category: article.category as any, tags: article.tags, authorId: article.author_id, authorRole: article.author_role as any, status: 'published', publishedAt: new Date(article.published_at), updatedAt: new Date(article.updated_at), featured: article.featured, estReadMin: article.est_read_min, views: article.views }));
           setLatestArticles(converted.slice(0, 6));
           setOpinionArticles(converted.filter(a => a.category === 'Opinion').slice(0, 3));
         }
-      } catch (error) {
-        console.error('Error loading articles:', error);
-      }
+      } catch (error) { console.error('Error loading articles:', error); }
     };
     loadArticles();
   }, []);
@@ -47,18 +37,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
     const fetchMarketData = async () => {
       try {
         setDataLoading(true);
-        const timeoutId = setTimeout(() => {
-          setSampleIndices([fallbackIndex('^GSPC', 'S&P 500'), fallbackIndex('^BVSP', 'Ibovespa'), fallbackIndex('^STOXX50E', 'Euro Stoxx 50')]);
-          setDataLoading(false);
-        }, 5000);
+        const timeoutId = setTimeout(() => { setSampleIndices([fallbackIndex('^GSPC', 'S&P 500'), fallbackIndex('^BVSP', 'Ibovespa'), fallbackIndex('^STOXX50E', 'Euro Stoxx 50')]); setDataLoading(false); }, 5000);
         const indices = await MarketDataService.getMultipleIndexData(['^GSPC', '^BVSP', '^STOXX50E']);
         clearTimeout(timeoutId);
         setSampleIndices(indices);
       } catch (error) {
         setSampleIndices([fallbackIndex('^GSPC', 'S&P 500'), fallbackIndex('^BVSP', 'Ibovespa'), fallbackIndex('^STOXX50E', 'Euro Stoxx 50')]);
-      } finally {
-        setDataLoading(false);
-      }
+      } finally { setDataLoading(false); }
     };
     fetchMarketData();
   }, []);
@@ -74,11 +59,11 @@ export function HomePage({ onNavigate }: HomePageProps) {
             <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">Making markets approachable for anyone interested in investing, finance, and economic thinking.</p>
           </div>
           {!dataLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {sampleIndices.map((index) => (<Card key={index.symbol} className="bg-muted/30"><CardContent className="p-6"><div className="text-sm text-muted-foreground mb-2">{index.name}</div><div className="flex items-center justify-between"><span className="text-lg font-semibold">{index.price.toLocaleString()}</span><div className={`flex items-center space-x-1 ${index.change >= 0 ? 'text-green-600' : 'text-red-600'}`}><TrendingUp className={`h-4 w-4 ${index.change < 0 ? 'rotate-180' : ''}`} /><span className="text-sm font-medium">{index.changePercent > 0 ? '+' : ''}{index.changePercent.toFixed(2)}%</span></div></div></CardContent></Card>))}
             </div>
           )}
-          {!dataLoading && (<div className="max-w-2xl mx-auto mt-6 mb-8 p-3 text-center"><p className="text-sm text-muted-foreground"><strong>Note:</strong> Market values shown are placeholders. We're working on live data integration.</p></div>)}
+          {!dataLoading && (<div className="hidden md:block max-w-2xl mx-auto mt-6 mb-8 p-3 text-center"><p className="text-sm text-muted-foreground"><strong>Note:</strong> Market values shown are placeholders. We're working on live data integration.</p></div>)}
           <div className="flex flex-col sm:flex-row gap-6 justify-center mt-16">
             <Button size="lg" onClick={() => onNavigate('markets')} className="bg-primary hover:bg-primary/90">Read Markets<ChevronRight className="ml-2 h-4 w-4" /></Button>
             <Button size="lg" variant="outline" onClick={() => onNavigate('watchlist')}>See Watchlist</Button>
