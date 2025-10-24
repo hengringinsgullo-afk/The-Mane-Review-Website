@@ -44,17 +44,16 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
   }, [article]);
 
   const formatDate = (date: Date) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
-  const getRegionColor = (region: string) => ({ Brazil: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', USA: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', Europe: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200', Asia: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' }[region as keyof typeof colors] || 'bg-gray-100 text-gray-800');
-  
-  const renderContent = (body: string) => body.split('\n\n').map((paragraph, index) => {
-    if (paragraph.startsWith('# ')) return (<h1 key={index} className="text-3xl font-bold mb-8 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{paragraph.replace('# ', '')}</h1>);
-    if (paragraph.startsWith('## ')) return (<h2 key={index} className="text-2xl font-semibold mb-6 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{paragraph.replace('## ', '')}</h2>);
-    if (paragraph.startsWith('### ')) return (<h3 key={index} className="text-xl font-medium mb-4 text-primary">{paragraph.replace('### ', '')}</h3>);
-    return (<p key={index} className="mb-6 leading-relaxed text-foreground">{paragraph}</p>);
+  const getRegionColor = (region: string) => ({ Brazil: 'bg-green-100 text-green-800', USA: 'bg-blue-100 text-blue-800', Europe: 'bg-purple-100 text-purple-800', Asia: 'bg-orange-100 text-orange-800' }[region] || 'bg-gray-100 text-gray-800');
+  const renderContent = (body: string) => body.split('\n\n').map((p, i) => {
+    if (p.startsWith('# ')) return (<h1 key={i} className="text-3xl font-bold mb-8 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('# ', '')}</h1>);
+    if (p.startsWith('## ')) return (<h2 key={i} className="text-2xl font-semibold mb-6 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('## ', '')}</h2>);
+    if (p.startsWith('### ')) return (<h3 key={i} className="text-xl font-medium mb-4 text-primary">{p.replace('### ', '')}</h3>);
+    return (<p key={i} className="mb-6 leading-relaxed text-foreground">{p}</p>);
   });
 
-  if (loading) return (<div className="container mx-auto px-4 py-12"><div className="text-center">Loading article...</div></div>);
-  if (!article) return (<div className="container mx-auto px-4 py-12"><Card className="p-8 text-center"><CardContent><h2 className="text-2xl font-bold mb-4">Article Not Found</h2><p className="text-muted-foreground mb-4">The article you're looking for doesn't exist or has been moved.</p><Button onClick={() => onNavigate('home')}>Return Home</Button></CardContent></Card></div>);
+  if (loading) return (<div className="container mx-auto px-4 py-12"><div className="text-center">Loading...</div></div>);
+  if (!article) return (<div className="container mx-auto px-4 py-12"><Card className="p-8 text-center"><CardContent><h2 className="text-2xl font-bold mb-4">Article Not Found</h2><p className="text-muted-foreground mb-4">The article you're looking for doesn't exist.</p><Button onClick={() => onNavigate('home')}>Return Home</Button></CardContent></Card></div>);
 
   return (
     <article className="container mx-auto px-4 py-12 max-w-4xl">
@@ -65,19 +64,13 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
           {article.featured && (<Badge className="bg-secondary text-secondary-foreground" style={{ padding: '6px 12px', fontSize: '14px' }}>Featured</Badge>)}
           {article.authorRole === 'Student' && (<Badge className="bg-muted text-muted-foreground" style={{ padding: '6px 12px', fontSize: '14px' }}><User className="h-3 w-3 mr-1" />Student Contributor</Badge>)}
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-primary leading-tight mb-6" style={{ fontFamily: 'var(--font-headline)' }}>{article.title}</h1>
+        <h1 className="font-bold text-primary leading-tight mb-6" style={{ fontFamily: 'var(--font-headline)', fontSize: '48px', lineHeight: '1.1' }}>{article.title}</h1>
         <p className="text-xl text-muted-foreground leading-relaxed mb-8">{article.excerpt}</p>
         <div className="flex flex-wrap gap-3 mb-16">{article.tags.map((tag) => (<Badge key={tag} variant="outline" className="text-sm px-4 py-2">{tag}</Badge>))}</div>
         <div className="flex flex-wrap items-center gap-8 pt-8">
-          <div>
-            <div className="font-semibold text-foreground text-lg mb-1">{(article as any).author_name || 'Anonymous'}</div>
-            <div className="text-sm text-muted-foreground">{article.authorRole}</div>
-          </div>
+          <div><div className="font-semibold text-foreground text-lg mb-1">{(article as any).author_name || 'Anonymous'}</div><div className="text-sm text-muted-foreground">{article.authorRole}</div></div>
           <Separator orientation="vertical" className="h-12 hidden sm:block" />
-          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2"><Calendar className="h-5 w-5" /><span>{article.publishedAt && formatDate(article.publishedAt)}</span></div>
-            <div className="flex items-center gap-2"><Clock className="h-5 w-5" /><span>{article.estReadMin} min read</span></div>
-          </div>
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground"><div className="flex items-center gap-2"><Calendar className="h-5 w-5" /><span>{article.publishedAt && formatDate(article.publishedAt)}</span></div><div className="flex items-center gap-2"><Clock className="h-5 w-5" /><span>{article.estReadMin} min read</span></div></div>
         </div>
       </header>
       {article.coverImage && (<div className="relative aspect-[16/9] mb-8 rounded-lg overflow-hidden"><ImageWithFallback src={article.coverImage} alt={article.coverAlt || article.title} className="w-full h-full object-cover" /></div>)}
