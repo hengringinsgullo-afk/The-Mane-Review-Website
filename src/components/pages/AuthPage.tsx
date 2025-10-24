@@ -23,6 +23,8 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
 
   const formatBrazilianPhone = (value: string) => {
     const numbers = value.replace(/\\D/g, '');
+    if (numbers.length === 0) return '';
+    if (numbers.length === 1) return numbers;
     if (numbers.length <= 2) return `(${numbers}`;
     else if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
     else if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
@@ -75,13 +77,7 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
       setSuccess('Login successful! Redirecting...');
       setTimeout(() => { onAuthSuccess?.(data.user); }, 1500);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to login';
-      if (formData.email === 'henriquegullo@themanereview.com' && errorMessage.includes('Invalid login credentials')) {
-        setError('Admin account not found. Please create the account using the "Create Admin Account" button below.');
-        setShowAdminSetup(true);
-      } else {
-        setError(errorMessage);
-      }
+      setError(err instanceof Error ? err.message : 'Failed to login');
     } finally {
       setIsLoading(false);
     }
@@ -104,22 +100,15 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
         else if (error.message.includes('Invalid email')) throw new Error('Please enter a valid email address.');
         throw error;
       }
-      if (formData.email === 'henriquegullo@themanereview.com') {
-        setSuccess('Admin account created successfully! You can now login with your credentials.');
-      } else {
-        setSuccess('Account created successfully! Please check your email to verify your account.');
-      }
+      setSuccess(formData.email === 'henriquegullo@themanereview.com' ? 'Admin account created successfully! You can now login with your credentials.' : 'Account created successfully! Please check your email to verify your account.');
       setActiveTab('login');
       setFormData({ email: '', password: '', confirmPassword: '', fullName: '', phoneNumber: '', dateOfBirth: '', isStPaulsMember: false, memberType: '', studentForm: '' });
     } catch (err) {
-      if (err instanceof Error) setError(`Signup failed: ${err.message}`);
-      else setError('Failed to create account. Please check the console for details.');
+      setError(err instanceof Error ? `Signup failed: ${err.message}` : 'Failed to create account.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const studentForms = ['Form 3', 'Form 4', 'Form 5', 'Lower 6', 'Upper 6'];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -131,8 +120,8 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
         <CardContent className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="flex w-full mb-6 gap-4 bg-transparent p-0">
-              <TabsTrigger value="login" className="flex-1 transition-colors duration-200" style={{ borderColor: '#000', borderWidth: '2px', borderStyle: 'solid', backgroundColor: activeTab === 'login' ? '#d1d5db' : 'transparent' }} onMouseEnter={(e) => { if (activeTab !== 'login') e.currentTarget.style.backgroundColor = '#f3f4f6'; }} onMouseLeave={(e) => { if (activeTab !== 'login') e.currentTarget.style.backgroundColor = 'transparent'; }}>Sign In</TabsTrigger>
-              <TabsTrigger value="signup" className="flex-1 transition-colors duration-200" style={{ borderColor: '#000', borderWidth: '2px', borderStyle: 'solid', backgroundColor: activeTab === 'signup' ? '#d1d5db' : 'transparent' }} onMouseEnter={(e) => { if (activeTab !== 'signup') e.currentTarget.style.backgroundColor = '#f3f4f6'; }} onMouseLeave={(e) => { if (activeTab !== 'signup') e.currentTarget.style.backgroundColor = 'transparent'; }}>Create Account</TabsTrigger>
+              <TabsTrigger value="login" className="flex-1 transition-colors duration-200" style={{ borderColor: '#000', borderWidth: '2px', borderStyle: 'solid', backgroundColor: activeTab === 'login' ? '#d1d5db' : 'transparent' }}>Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="flex-1 transition-colors duration-200" style={{ borderColor: '#000', borderWidth: '2px', borderStyle: 'solid', backgroundColor: activeTab === 'signup' ? '#d1d5db' : 'transparent' }}>Create Account</TabsTrigger>
             </TabsList>
             <TabsContent value="login" className="space-y-4" forceMount={activeTab === 'login'} hidden={activeTab !== 'login'}>
               {error && (<Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>)}
