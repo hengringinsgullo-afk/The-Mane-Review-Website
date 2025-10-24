@@ -6,30 +6,33 @@ import { Badge } from '../ui/badge';
 import { ArticleCard } from '../ui/article-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { TrendingUp, TrendingDown, Globe, Calendar, Building } from 'lucide-react';
-import { regionalIndices } from '../../lib/data';
+import { mockArticles, regionalIndices } from '../../lib/data';
 import { Region, Article } from '../../lib/types';
 import { supabase } from '../../lib/supabase';
 
-interface MarketsPageProps { region?: Region; onNavigate: (page: string, data?: any) => void; }
+interface MarketsPageProps {
+  region?: Region;
+  onNavigate: (page: string, data?: any) => void;
+}
+
 type SortOption = 'latest' | 'popular' | 'featured';
 
 export function MarketsPage({ region: initialRegion, onNavigate }: MarketsPageProps) {
   const [activeRegion, setActiveRegion] = useState<Region>(initialRegion || 'USA');
   const [sortBy, setSortBy] = useState<SortOption>('latest');
   const [articles, setArticles] = useState<Article[]>([]);
+
   const regions: Region[] = ['USA', 'Europe', 'South America', 'Asia'];
 
   useEffect(() => {
     const loadArticles = async () => {
       try {
         const { data: dbArticles } = await supabase.from('articles').select('*').eq('status', 'published').eq('category', 'Markets').eq('region', activeRegion);
-        const converted: Article[] = (dbArticles || []).map(article => ({ id: article.id, slug: article.slug, title: article.title, excerpt: article.excerpt || '', body: article.body, coverImage: article.cover_image, coverAlt: article.cover_alt, region: article.region as any, category: article.category as any, tags: article.tags, authorId: article.author_id, authorRole: article.author_role as any, status: 'published', publishedAt: new Date(article.published_at), updatedAt: new Date(article.updated_at), featured: article.featured, estReadMin: article.est_read_min, views: article.views }));
-        let sorted = [...converted];
-        if (sortBy === 'latest') sorted.sort((a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime());
-        else if (sortBy === 'popular') sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
-        else if (sortBy === 'featured') sorted.sort((a, b) => { if (a.featured && !b.featured) return -1; if (!a.featured && b.featured) return 1; return new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime(); });
+        const convertedArticles: Article[] = (dbArticles || []).map(article => ({ id: article.id, slug: article.slug, title: article.title, excerpt: article.excerpt || '', body: article.body, coverImage: article.cover_image, coverAlt: article.cover_alt, region: article.region as any, category: article.category as any, tags: article.tags, authorId: article.author_id, authorRole: article.author_role as any, status: 'published', publishedAt: new Date(article.published_at), updatedAt: new Date(article.updated_at), featured: article.featured, estReadMin: article.est_read_min, views: article.views }));
+        let sorted = [...convertedArticles];
+        switch (sortBy) { case 'latest': sorted.sort((a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime()); break; case 'popular': sorted.sort((a, b) => (b.views || 0) - (a.views || 0)); break; case 'featured': sorted.sort((a, b) => { if (a.featured && !b.featured) return -1; if (!a.featured && b.featured) return 1; return new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime(); }); break; }
         setArticles(sorted);
-      } catch (error) { setArticles([]); }
+      } catch (error) { console.error('Error loading articles:', error); setArticles([]); }
     };
     loadArticles();
   }, [activeRegion, sortBy]);
@@ -39,7 +42,7 @@ export function MarketsPage({ region: initialRegion, onNavigate }: MarketsPagePr
     const isPositive = change >= 0;
     return { color: isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400', icon: isPositive ? TrendingUp : TrendingDown, text: `${isPositive ? '+' : ''}${change.toFixed(2)} (${isPositive ? '+' : ''}${changePercent.toFixed(2)}%)` };
   };
-  const getRegionDescription = (region: Region) => ({ 'South America': 'Track Latin American markets.', USA: 'Follow U.S. markets including the S&P 500, Nasdaq, and Dow Jones, with analysis of Federal Reserve policy and sector trends.', Europe: 'Monitor European markets and the Euro Stoxx 50.', Asia: 'Explore Asian markets from Tokyo to Hong Kong.' }[region]);
+  const getRegionDescription = (region: Region) => ({ 'South America': 'Track Latin American markets including Brazil\'s Ibovespa, Argentina\'s Merval, and Chile\'s IPSA, with insights on emerging market opportunities.', USA: 'Follow U.S. markets including the S&P 500, Nasdaq, and Dow Jones, with analysis of Federal Reserve policy and sector trends.', Europe: 'Monitor European markets and the Euro Stoxx 50, covering ECB decisions, Brexit impacts, and continental investment themes.', Asia: 'Explore Asian markets from Tokyo to Hong Kong, covering tech innovation, trade dynamics, and economic growth across the region.' }[region]);
 
   return (
     <div className="container mx-auto px-4 py-12 space-y-8">
