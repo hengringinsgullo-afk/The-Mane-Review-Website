@@ -9,9 +9,7 @@ import { MarketIndex, Article } from '../../lib/types';
 import { MarketDataService, fallbackIndex } from '../../lib/market-api';
 import { supabase } from '../../lib/supabase';
 
-interface HomePageProps {
-  onNavigate: (page: string, data?: any) => void;
-}
+interface HomePageProps { onNavigate: (page: string, data?: any) => void; }
 
 export function HomePage({ onNavigate }: HomePageProps) {
   const [sampleIndices, setSampleIndices] = useState<MarketIndex[]>([]);
@@ -41,9 +39,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
         const indices = await MarketDataService.getMultipleIndexData(['^GSPC', '^BVSP', '^STOXX50E']);
         clearTimeout(timeoutId);
         setSampleIndices(indices);
-      } catch (error) {
-        setSampleIndices([fallbackIndex('^GSPC', 'S&P 500'), fallbackIndex('^BVSP', 'Ibovespa'), fallbackIndex('^STOXX50E', 'Euro Stoxx 50')]);
-      } finally { setDataLoading(false); }
+      } catch (error) { setSampleIndices([fallbackIndex('^GSPC', 'S&P 500'), fallbackIndex('^BVSP', 'Ibovespa'), fallbackIndex('^STOXX50E', 'Euro Stoxx 50')]); } finally { setDataLoading(false); }
     };
     fetchMarketData();
   }, []);
@@ -64,7 +60,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
             </div>
           )}
           {!dataLoading && (<div className="hidden md:block max-w-2xl mx-auto mt-6 mb-8 p-3 text-center"><p className="text-sm text-muted-foreground"><strong>Note:</strong> Market values shown are placeholders. We're working on live data integration.</p></div>)}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mt-16">
+          <div className="hidden md:flex flex-col sm:flex-row gap-6 justify-center mt-16">
             <Button size="lg" onClick={() => onNavigate('markets')} className="bg-primary hover:bg-primary/90">Read Markets<ChevronRight className="ml-2 h-4 w-4" /></Button>
             <Button size="lg" variant="outline" onClick={() => onNavigate('watchlist')}>See Watchlist</Button>
           </div>
@@ -80,6 +76,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
       <section className="container mx-auto px-4 pt-16">
         <div className="flex items-center justify-between mb-8">
           <div>
+            <div className="w-32 h-1 bg-secondary mb-4"></div>
             <h2 className="text-3xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-headline)' }}>From Opinion</h2>
             <p className="text-muted-foreground">Insights and perspectives from our student contributors at St. Paul's School</p>
           </div>
