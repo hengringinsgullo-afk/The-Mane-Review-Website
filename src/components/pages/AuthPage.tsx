@@ -7,7 +7,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { User, Mail, Lock, Phone, Calendar, School, GraduationCap, Briefcase, AlertCircle, CheckCircle2, Loader2, Shield } from 'lucide-react';
+import { User, Mail, Lock, Phone, Calendar, School, GraduationCap, Briefcase, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { authHelpers } from '../../lib/supabase';
 
 interface AuthPageProps { onAuthSuccess?: (user: any) => void; onNavigate?: (page: string) => void; defaultTab?: 'login' | 'signup'; }
@@ -25,8 +25,8 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
 
   const validateForm = (isSignup: boolean = false) => {
     const errors: Record<string, string> = {};
-    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-    if (!emailRegex.test(formData.email)) errors.email = 'Please enter a valid email address';
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
+    if (!formData.email || !emailRegex.test(formData.email.trim())) errors.email = 'Please enter a valid email address';
     if (formData.password.length < 6) errors.password = 'Password must be at least 6 characters';
     if (isSignup) {
       if (formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
@@ -46,7 +46,7 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (validationErrors[field]) setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    setValidationErrors({});
     if (field === 'isStPaulsMember' && !value) setFormData(prev => ({ ...prev, memberType: '', studentForm: '' }));
     if (field === 'memberType' && value === 'staff') setFormData(prev => ({ ...prev, studentForm: '' }));
   };
@@ -59,7 +59,7 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
     setIsLoading(true);
     setError(null);
     try {
-      const { data, error } = await authHelpers.signIn(formData.email, formData.password);
+      const { data, error } = await authHelpers.signIn(formData.email.trim(), formData.password);
       if (error) throw error;
       setSuccess('Login successful! Redirecting...');
       setTimeout(() => { onAuthSuccess?.(data.user); }, 1500);
@@ -80,14 +80,14 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
       if (formData.email !== 'henriquegullo@themanereview.com') {
         metadata = { full_name: formData.fullName, phone_number: formData.phoneNumber, date_of_birth: formData.dateOfBirth, is_st_pauls_member: formData.isStPaulsMember, member_type: formData.memberType || null, student_form: formData.studentForm || null, role: formData.memberType === 'staff' ? 'Contributor' : 'Student' };
       }
-      const { data, error } = await authHelpers.signUp(formData.email, formData.password, metadata);
+      const { data, error } = await authHelpers.signUp(formData.email.trim(), formData.password, metadata);
       if (error) {
         if (error.message.includes('User already registered')) throw new Error('This email is already registered. Please login instead.');
         else if (error.message.includes('Password')) throw new Error('Password must be at least 6 characters long.');
         else if (error.message.includes('Invalid email')) throw new Error('Please enter a valid email address.');
         throw error;
       }
-      setSuccess(formData.email === 'henriquegullo@themanereview.com' ? 'Admin account created successfully! You can now login with your credentials.' : 'Account created successfully! Please check your email to verify your account.');
+      setSuccess(formData.email === 'henriquegullo@themanereview.com' ? 'Admin account created successfully!' : 'Account created successfully! Please check your email to verify.');
       setActiveTab('login');
       setFormData({ email: '', password: '', confirmPassword: '', fullName: '', phoneNumber: '', dateOfBirth: '', isStPaulsMember: false, memberType: '', studentForm: '' });
     } catch (err) {
@@ -114,8 +114,8 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
               {error && (<Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>)}
               {success && (<Alert className="border-green-600 text-green-600"><CheckCircle2 className="h-4 w-4" /><AlertDescription>{success}</AlertDescription></Alert>)}
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2"><Label htmlFor="login-email">Email</Label><div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><Input id="login-email" type="email" placeholder="you@example.com" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className={`flex-1 ${validationErrors.email ? 'border-red-500' : ''}`} required /></div>{validationErrors.email && (<p className="text-xs text-red-500">{validationErrors.email}</p>)}</div>
-                <div className="space-y-2"><Label htmlFor="login-password">Password</Label><div className="flex items-center gap-3"><Lock className="h-4 w-4 text-muted-foreground" /><Input id="login-password" type="password" placeholder="••••••••" value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} className={`flex-1 ${validationErrors.password ? 'border-red-500' : ''}`} required /></div>{validationErrors.password && (<p className="text-xs text-red-500">{validationErrors.password}</p>)}</div>
+                <div className="space-y-2"><Label htmlFor="login-email">Email</Label><div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><Input id="login-email" type="email" placeholder="you@example.com" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className="flex-1" required /></div></div>
+                <div className="space-y-2"><Label htmlFor="login-password">Password</Label><div className="flex items-center gap-3"><Lock className="h-4 w-4 text-muted-foreground" /><Input id="login-password" type="password" placeholder="••••••••" value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} className="flex-1" required /></div></div>
                 <div className="pt-2"><Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</>) : ('Sign In')}</Button></div>
               </form>
               <div className="text-center text-sm text-muted-foreground pt-2">Don't have an account? <button type="button" onClick={() => setActiveTab('signup')} className="text-primary hover:underline font-medium">Create one</button></div>
