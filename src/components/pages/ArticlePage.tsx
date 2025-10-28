@@ -63,6 +63,7 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
           <Badge className={getRegionColor(article.region)} style={{ padding: '6px 12px', fontSize: '14px' }}>{article.region}</Badge>
           {article.featured && (<Badge className="bg-secondary text-secondary-foreground" style={{ padding: '6px 12px', fontSize: '14px' }}>Featured</Badge>)}
           {article.authorRole === 'Student' && (<Badge className="bg-muted text-muted-foreground" style={{ padding: '6px 12px', fontSize: '14px' }}><User className="h-3 w-3 mr-1" />Student Contributor</Badge>)}
+          {article.authorRole === 'Founder' && (<Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" style={{ padding: '6px 12px', fontSize: '14px' }}><User className="h-3 w-3 mr-1" />Expert</Badge>)}
         </div>
         <h1 className="font-bold text-primary leading-tight mb-6" style={{ fontFamily: 'var(--font-headline)', fontSize: '48px', lineHeight: '1.1' }}>{article.title}</h1>
         <p className="text-xl text-muted-foreground leading-relaxed mb-8">{article.excerpt}</p>

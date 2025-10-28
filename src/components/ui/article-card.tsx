@@ -23,6 +23,7 @@ export function ArticleCard({ article, onClick, showRegion = true, className = '
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {showRegion && (<Badge variant="secondary" className={getRegionColor(article.region)}>{article.region}</Badge>)}
             {article.authorRole === 'Student' && (<Badge className={getAuthorBadgeColor(article.authorRole)}><User className="h-3 w-3 mr-1" />Student Contributor</Badge>)}
+            {article.authorRole === 'Founder' && (<Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"><User className="h-3 w-3 mr-1" />Expert</Badge>)}
             {article.tags.slice(0, 2).map((tag) => (<Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>))}
           </div>
           <h3 className="text-xl font-semibold mb-3 line-clamp-2 group-hover:text-secondary transition-colors" style={{ fontFamily: 'var(--font-headline)' }}>{article.title}</h3>
