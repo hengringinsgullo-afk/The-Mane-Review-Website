@@ -313,6 +313,7 @@ export default function App() {
         }
         return prev.slice(0, -1);
       });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -356,6 +357,9 @@ export default function App() {
       console.log('[App] Navigating from', current.page, 'to', normalized);
       return [...prev, nextEntry];
     });
+
+    // Scroll to top after navigation
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const renderPage = () => {
