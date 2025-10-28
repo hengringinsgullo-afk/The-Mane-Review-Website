@@ -46,9 +46,9 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
   const formatDate = (date: Date) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
   const getRegionColor = (region: string) => ({ Brazil: 'bg-green-100 text-green-800', USA: 'bg-blue-100 text-blue-800', Europe: 'bg-purple-100 text-purple-800', Asia: 'bg-orange-100 text-orange-800' }[region] || 'bg-gray-100 text-gray-800');
   const renderContent = (body: string) => body.split('\n\n').map((p, i) => {
-    if (p.startsWith('# ')) return (<h1 key={i} className="text-3xl font-bold mb-8 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('# ', '')}</h1>);
-    if (p.startsWith('## ')) return (<h2 key={i} className="text-2xl font-semibold mb-6 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('## ', '')}</h2>);
-    if (p.startsWith('### ')) return (<h3 key={i} className="text-xl font-medium mb-4 text-primary">{p.replace('### ', '')}</h3>);
+    if (p.startsWith('# ')) return (<h1 key={i} className="text-4xl font-bold mb-8 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('# ', '')}</h1>);
+    if (p.startsWith('## ')) return (<h2 key={i} className="text-3xl font-bold mb-6 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('## ', '')}</h2>);
+    if (p.startsWith('### ')) return (<h3 key={i} className="text-2xl font-semibold mb-4 text-primary">{p.replace('### ', '')}</h3>);
     return (<p key={i} className="mb-6 leading-relaxed text-foreground">{p}</p>);
   });
 
@@ -66,16 +66,13 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
         </div>
         <h1 className="font-bold text-primary leading-tight mb-6" style={{ fontFamily: 'var(--font-headline)', fontSize: '48px', lineHeight: '1.1' }}>{article.title}</h1>
         <p className="text-xl text-muted-foreground leading-relaxed mb-8">{article.excerpt}</p>
-        <div className="flex flex-wrap gap-3 mb-16">{article.tags.map((tag) => (<Badge key={tag} variant="outline" className="text-sm px-4 py-2">{tag}</Badge>))}</div>
-        <div className="flex flex-wrap items-center gap-8 pt-8">
-          <div><div className="font-semibold text-foreground text-lg mb-1">{(article as any).author_name || 'Anonymous'}</div><div className="text-sm text-muted-foreground">{article.authorRole}</div></div>
-          <Separator orientation="vertical" className="h-12 hidden sm:block" />
-          <div className="flex flex-col gap-2 text-sm text-muted-foreground"><div className="flex items-center gap-2"><Calendar className="h-5 w-5" /><span>{article.publishedAt && formatDate(article.publishedAt)}</span></div><div className="flex items-center gap-2"><Clock className="h-5 w-5" /><span>{article.estReadMin} min read</span></div></div>
-        </div>
+        <div className="flex flex-wrap gap-4 mb-12">{article.tags.map((tag) => (<Badge key={tag} variant="outline" className="text-sm px-4 py-2">{tag}</Badge>))}</div>
+        <div className="flex flex-wrap items-center gap-8 pt-6 pb-12"><div><div className="font-semibold text-foreground text-lg mb-1">{(article as any).author_name || 'Anonymous'}</div><div className="text-sm text-muted-foreground">{article.authorRole}</div></div><Separator orientation="vertical" className="h-12 hidden sm:block" /><div className="flex items-center gap-2 text-base text-muted-foreground"><Calendar className="h-5 w-5" /><span>{article.publishedAt && formatDate(article.publishedAt)}</span></div><div className="flex items-center gap-2 text-base text-muted-foreground"><Clock className="h-5 w-5" /><span>{article.estReadMin} min read</span></div></div>
       </header>
-      {article.coverImage && (<div className="relative aspect-[16/9] mb-8 rounded-lg overflow-hidden"><ImageWithFallback src={article.coverImage} alt={article.coverAlt || article.title} className="w-full h-full object-cover" /></div>)}
+      {article.coverImage && (<div className="relative aspect-[16/9] mb-8 mt-12 rounded-lg overflow-hidden"><ImageWithFallback src={article.coverImage} alt={article.coverAlt || article.title} className="w-full h-full object-cover" /></div>)}
       <div className="prose prose-lg max-w-none mb-12">{renderContent(article.body)}</div>
-      {relatedArticles.length > 0 && (<section className="mt-16 pt-8 border-t"><h2 className="text-2xl font-bold text-primary mb-6" style={{ fontFamily: 'var(--font-headline)' }}>Related Articles</h2><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{relatedArticles.map((related) => (<ArticleCard key={related.id} article={related} onClick={(slug) => onNavigate('article', { slug })} />))}</div></section>)}
+      <Card className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800 mb-16"><CardContent className="p-6"><div className="text-sm text-amber-900 dark:text-amber-100"><p className="font-medium mb-2">Educational Content Disclaimer</p><p>This article is provided for educational purposes only and should not be considered as financial advice. Always consult with a qualified financial advisor before making investment decisions.</p></div></CardContent></Card>
+      {relatedArticles.length > 0 && (<section className="space-y-8 mt-16"><h2 className="text-3xl font-bold text-primary mb-8" style={{ fontFamily: 'var(--font-headline)' }}>Related Articles</h2><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{relatedArticles.map((related) => (<ArticleCard key={related.id} article={related} onClick={(slug) => onNavigate('article', { slug })} />))}</div></section>)}
     </article>
   );
 }
