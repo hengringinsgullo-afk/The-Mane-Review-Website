@@ -461,7 +461,7 @@ export default function App() {
         {renderPage()}
       </main>
 
-      <Footer />
+      <Footer onNavigate={handleNavigate} />
       <Toaster />
     </div>
   );
