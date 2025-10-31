@@ -277,26 +277,26 @@ export function EnhancedArticleReview({
   return (
     <div className="space-y-6">
       {/* Enhanced Header with Stats */}
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold flex items-center gap-2">
-              <MessageSquare className="h-8 w-8" />
-              Editorial Review Center
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 flex-wrap">
+              <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
+              <span>Editorial Review Centre</span>
             </h2>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Review and manage article submissions with precision
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-2xl font-bold text-primary">{pendingArticles.length}</p>
-              <p className="text-sm text-muted-foreground">Awaiting Review</p>
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <div className="text-center sm:text-right">
+              <p className="text-xl sm:text-2xl font-bold text-primary">{pendingArticles.length}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Awaiting Review</p>
             </div>
-            <Separator orientation="vertical" className="h-12" />
-            <div className="text-right">
-              <p className="text-2xl font-bold text-green-600">{reviewedArticles.length}</p>
-              <p className="text-sm text-muted-foreground">Reviewed Today</p>
+            <Separator orientation="vertical" className="h-10 sm:h-12" />
+            <div className="text-center sm:text-right">
+              <p className="text-xl sm:text-2xl font-bold text-green-600">{reviewedArticles.length}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Reviewed Today</p>
             </div>
           </div>
         </div>
@@ -304,28 +304,30 @@ export function EnhancedArticleReview({
 
       {/* Advanced Filters and Search */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Filter className="h-5 w-5" />
             Filters & Search
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
             
             <Select value={filterRegion} onValueChange={setFilterRegion}>
-              <SelectTrigger>
-                <Globe className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="All Regions" />
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2 w-full">
+                  <Globe className="h-4 w-4 flex-shrink-0" />
+                  <SelectValue placeholder="All Regions" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Regions</SelectItem>
@@ -337,9 +339,11 @@ export function EnhancedArticleReview({
             </Select>
 
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger>
-                <Tag className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="All Categories" />
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2 w-full">
+                  <Tag className="h-4 w-4 flex-shrink-0" />
+                  <SelectValue placeholder="All Categories" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -349,9 +353,11 @@ export function EnhancedArticleReview({
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <TrendingUp className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Sort By" />
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2 w-full">
+                  <TrendingUp className="h-4 w-4 flex-shrink-0" />
+                  <SelectValue placeholder="Sort By" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest">Newest First</SelectItem>
@@ -372,15 +378,15 @@ export function EnhancedArticleReview({
       )}
 
       {/* Enhanced Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="pending" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Pending Review ({pendingArticles.length})
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="pending" className="flex items-center justify-center gap-2 py-3 px-2 sm:px-4">
+            <Clock className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Pending Review ({pendingArticles.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="reviewed" className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            Recently Reviewed ({reviewedArticles.length})
+          <TabsTrigger value="reviewed" className="flex items-center justify-center gap-2 py-3 px-2 sm:px-4">
+            <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Recently Reviewed ({reviewedArticles.length})</span>
           </TabsTrigger>
         </TabsList>
 

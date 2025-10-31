@@ -80,7 +80,6 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
     if (!formData.title.trim()) return 'Title is required';
     if (!formData.body.trim()) return 'Article content is required';
     if (!formData.author_name.trim()) return 'Author name is required';
-    if (wordCount < 300) return 'Article must be at least 300 words';
     if (wordCount > 2000) return 'Article must be less than 2000 words';
     return null;
   };
@@ -121,15 +120,40 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
 
       // Get the users.id from the users table using auth_id
       console.log('[ArticleSubmissionForm] Getting user profile for auth_id:', authUser.id);
-      const { data: userProfile, error: profileError } = await supabase
+      let { data: userProfile, error: profileError } = await supabase
         .from('users')
         .select('id')
         .eq('auth_id', authUser.id)
         .single();
 
       console.log('[ArticleSubmissionForm] User profile:', userProfile, profileError);
+      
+      // If profile doesn't exist, try to create it automatically
       if (profileError || !userProfile) {
-        throw new Error('User profile not found. Please complete your profile setup.');
+        console.log('[ArticleSubmissionForm] Profile not found, attempting to create...');
+        try {
+          const { data: newProfile, error: createError } = await supabase
+            .from('users')
+            .insert({
+              auth_id: authUser.id,
+              email: authUser.email,
+              name: formData.author_name || authUser.email?.split('@')[0] || 'User',
+              role: 'Student'
+            })
+            .select('id')
+            .single();
+
+          if (createError) {
+            console.error('[ArticleSubmissionForm] Failed to create profile:', createError);
+            throw new Error('Unable to create user profile. Please try logging out and back in.');
+          }
+          
+          userProfile = newProfile;
+          console.log('[ArticleSubmissionForm] Profile created successfully:', userProfile);
+        } catch (createErr) {
+          console.error('[ArticleSubmissionForm] Profile creation failed:', createErr);
+          throw new Error('User profile not found. Please refresh the page and try again.');
+        }
       }
 
       const tagsArray = formData.tags
@@ -175,7 +199,6 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
   };
 
   const getWordCountColor = () => {
-    if (wordCount < 300) return 'text-red-600';
     if (wordCount > 2000) return 'text-orange-600';
     if (wordCount >= 800 && wordCount <= 1500) return 'text-green-600';
     return 'text-blue-600';
@@ -353,7 +376,7 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
                 required
               />
               <div className="text-xs text-muted-foreground">
-                Recommended: 800-1500 words. Current: {wordCount} words
+                Recommended: 800-1500 words. Maximum: 2000 words. Current: {wordCount} words
               </div>
             </div>
 

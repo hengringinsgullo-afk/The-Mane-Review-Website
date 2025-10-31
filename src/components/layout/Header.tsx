@@ -1,39 +1,160 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
-import { Menu, User, Shield, Bell } from 'lucide-react';
+import { Menu, User, Shield, Bell, CheckCircle2, XCircle, Clock, FileText } from 'lucide-react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '../ui/dropdown-menu';
 import { Badge } from '../ui/badge';
-import { articleOperations } from '../../lib/supabase';
+import { articleOperations, supabase } from '../../lib/supabase';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface HeaderProps { currentPage: string; onNavigate: (page: string, data?: any) => void; user?: { name: string; role: string } | null; onLogin: () => void; onRegister: () => void; onLogout: () => void; }
 
 const navLinks = [{ name: 'Home', path: '/', label: 'Home' }, { name: 'Markets', path: '/markets', label: 'Markets' }, { name: 'Opinion', path: '/opinion', label: 'Opinion' }, { name: 'Watchlist', path: '/watchlist', label: 'Watchlist' }, { name: 'About', path: '/about', label: 'About' }];
 
+interface Notification {
+  id: string;
+  type: 'review_pending' | 'article_approved' | 'article_rejected' | 'article_needs_changes';
+  title: string;
+  message: string;
+  articleId?: string;
+  articleTitle?: string;
+  createdAt: Date;
+  read: boolean;
+}
+
 export function Header({ currentPage, onNavigate, user, onLogin, onRegister, onLogout }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // Load pending review count for Admins and Editors
-    if (user && (user.role === 'Admin' || user.role === 'Editor')) {
-      loadPendingReviews();
+    if (user) {
+      loadNotifications();
       
-      // Refresh count every 30 seconds
-      const interval = setInterval(loadPendingReviews, 30000);
+      // Refresh notifications every 30 seconds
+      const interval = setInterval(loadNotifications, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
 
-  const loadPendingReviews = async () => {
+  const loadNotifications = async () => {
+    if (!user) return;
+
     try {
-      const articles = await articleOperations.getArticlesUnderReview();
-      setPendingReviewCount(articles.length);
+      const newNotifications: Notification[] = [];
+
+      // For Admins and Editors: show pending reviews
+      if (user.role === 'Admin' || user.role === 'Editor') {
+        const articles = await articleOperations.getArticlesUnderReview();
+        setPendingReviewCount(articles.length);
+        
+        articles.forEach(article => {
+          newNotifications.push({
+            id: `review-${article.id}`,
+            type: 'review_pending',
+            title: 'Article Awaiting Review',
+            message: `"${article.title}" by ${article.author_name}`,
+            articleId: article.id,
+            articleTitle: article.title,
+            createdAt: new Date(article.created_at),
+            read: false
+          });
+        });
+      }
+
+      // For all users: show their article status updates
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        // Get the user's ID from the users table
+        const { data: userProfile } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_id', authUser.id)
+          .single();
+
+        if (userProfile) {
+          const { data: userArticles } = await supabase
+            .from('articles')
+            .select('*')
+            .eq('author_id', userProfile.id)
+            .in('status', ['published', 'rejected'])
+            .order('updated_at', { ascending: false })
+            .limit(5);
+
+          userArticles?.forEach(article => {
+            if (article.status === 'published') {
+              newNotifications.push({
+                id: `approved-${article.id}`,
+                type: 'article_approved',
+                title: 'Article Published!',
+                message: `Your article "${article.title}" has been published`,
+                articleId: article.id,
+                articleTitle: article.title,
+                createdAt: new Date(article.updated_at),
+                read: false
+              });
+            } else if (article.status === 'rejected') {
+              newNotifications.push({
+                id: `rejected-${article.id}`,
+                type: 'article_rejected',
+                title: 'Article Needs Revision',
+                message: `Your article "${article.title}" requires changes`,
+                articleId: article.id,
+                articleTitle: article.title,
+                createdAt: new Date(article.updated_at),
+                read: false
+              });
+            }
+          });
+        }
+      }
+
+      // Sort by date
+      newNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      setNotifications(newNotifications);
+      setUnreadCount(newNotifications.filter(n => !n.read).length);
     } catch (error) {
-      console.error('Failed to load pending reviews:', error);
+      console.error('Failed to load notifications:', error);
     }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (notification.type === 'review_pending' && (user?.role === 'Admin' || user?.role === 'Editor')) {
+      onNavigate('admin');
+    } else if (notification.articleId) {
+      onNavigate('account');
+    }
+  };
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'review_pending':
+        return <Clock className="h-4 w-4 text-orange-500" />;
+      case 'article_approved':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'article_rejected':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'article_needs_changes':
+        return <FileText className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const formatNotificationTime = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   };
 
   const NavLink = ({ name, path, label, mobile = false }: { name: string; path: string; label: string; mobile?: boolean }) => {
@@ -63,8 +184,118 @@ export function Header({ currentPage, onNavigate, user, onLogin, onRegister, onL
             </button>
           </div>
           <nav className="hidden md:flex items-center space-x-1">{navLinks.map((link) => (<NavLink key={link.name} {...link} />))}</nav>
-          <div className="flex items-center space-x-4">
-            {user ? (<DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="relative h-8 w-8 rounded-full"><Avatar className="h-8 w-8"><AvatarFallback className="bg-secondary text-secondary-foreground">{user.name.charAt(0).toUpperCase()}</AvatarFallback></Avatar>{pendingReviewCount > 0 && (user.role === 'Admin' || user.role === 'Editor') && (<span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">{pendingReviewCount}</span>)}</Button></DropdownMenuTrigger><DropdownMenuContent className="w-56" align="end" forceMount><div className="flex flex-col space-y-1 p-2"><p className="text-sm font-medium">{user.name}</p><p className="text-xs text-muted-foreground">{user.role}</p></div><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onNavigate('account')}><User className="h-4 w-4 mr-2" />My Account</DropdownMenuItem><DropdownMenuItem onClick={() => onNavigate('watchlist')}>My Watchlist</DropdownMenuItem>{(user?.role === 'Admin' || user?.role === 'Editor') && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onNavigate('admin')} className="relative"><Shield className="h-4 w-4 mr-2" />{user.role === 'Admin' ? 'Admin Dashboard' : 'Review Dashboard'}{pendingReviewCount > 0 && (<Badge variant="destructive" className="ml-auto">{pendingReviewCount}</Badge>)}</DropdownMenuItem></>)}<DropdownMenuSeparator /><DropdownMenuItem onClick={onLogout}>Log out</DropdownMenuItem></DropdownMenuContent></DropdownMenu>) : (<div className="hidden md:flex items-center space-x-2"><Button variant="ghost" onClick={onLogin}>Login</Button><Button onClick={onRegister}>Register</Button></div>)}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {user ? (
+              <>
+                {/* Notification Bell */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-80" align="end">
+                    <DropdownMenuLabel className="flex items-center justify-between">
+                      <span>Notifications</span>
+                      {unreadCount > 0 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {unreadCount} new
+                        </Badge>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <ScrollArea className="h-[400px]">
+                      {notifications.length > 0 ? (
+                        <div className="space-y-1">
+                          {notifications.map((notification) => (
+                            <DropdownMenuItem
+                              key={notification.id}
+                              onClick={() => handleNotificationClick(notification)}
+                              className="flex items-start gap-3 p-3 cursor-pointer"
+                            >
+                              <div className="mt-0.5">
+                                {getNotificationIcon(notification.type)}
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <p className="text-sm font-medium leading-none">
+                                  {notification.title}
+                                </p>
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatNotificationTime(notification.createdAt)}
+                                </p>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center text-muted-foreground">
+                          <Bell className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                          <p className="text-sm">No notifications</p>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* User Avatar Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-secondary text-secondary-foreground">
+                          {user.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <div className="flex flex-col space-y-1 p-2">
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.role}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onNavigate('account')}>
+                      <User className="h-4 w-4 mr-2" />
+                      My Account
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onNavigate('watchlist')}>
+                      My Watchlist
+                    </DropdownMenuItem>
+                    {(user?.role === 'Admin' || user?.role === 'Editor') && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => onNavigate('admin')} className="relative">
+                          <Shield className="h-4 w-4 mr-2" />
+                          {user.role === 'Admin' ? 'Admin Dashboard' : 'Review Dashboard'}
+                          {pendingReviewCount > 0 && (
+                            <Badge variant="destructive" className="ml-auto">
+                              {pendingReviewCount}
+                            </Badge>
+                          )}
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onLogout}>
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <div className="hidden md:flex items-center space-x-2">
+                <Button variant="ghost" onClick={onLogin}>Login</Button>
+                <Button onClick={onRegister}>Register</Button>
+              </div>
+            )}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}><SheetTrigger asChild><Button variant="ghost" className="md:hidden" size="icon"><Menu className="h-5 w-5" /><span className="sr-only">Toggle menu</span></Button></SheetTrigger><SheetContent side="right" className="w-[300px] sm:w-[400px] rounded-l-3xl"><div className="flex flex-col space-y-6 mt-8"><nav className="flex flex-col space-y-3">{navLinks.map((link) => (<NavLink key={link.name} {...link} mobile />))}</nav>{!user && (<div className="border-t pt-6 flex flex-col space-y-3"><Button variant="ghost" onClick={() => { onLogin(); setMobileMenuOpen(false); }} className="rounded-xl h-12">Login</Button><Button onClick={() => { onRegister(); setMobileMenuOpen(false); }} className="rounded-xl h-12">Register</Button></div>)}</div></SheetContent></Sheet>
           </div>
         </div>

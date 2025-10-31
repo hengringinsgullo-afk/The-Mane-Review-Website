@@ -3,6 +3,8 @@ import { Button } from './components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { NavigationControls } from './components/ui/navigation-controls';
+import { Breadcrumbs } from './components/ui/breadcrumbs';
 import { HomePage } from './components/pages/HomePage';
 import { MarketsPage } from './components/pages/MarketsPage';
 import { OpinionPage } from './components/pages/OpinionPage';
@@ -92,6 +94,7 @@ export default function App() {
   };
 
   const [navStack, setNavStack] = useState<NavEntry[]>([{ page: getInitialPage() }]);
+  const [navIndex, setNavIndex] = useState(0); // Current position in history
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(getInitialProfile);
   const [authLoading, setAuthLoading] = useState(true);
@@ -99,7 +102,9 @@ export default function App() {
   // Prevent concurrent profile fetches
   const isCheckingUser = useRef(false);
 
-  const currentEntry = navStack[navStack.length - 1];
+  const currentEntry = navStack[navIndex];
+  const canGoBack = navIndex > 0;
+  const canGoForward = navIndex < navStack.length - 1;
 
   // Persist userProfile to localStorage whenever it changes
   useEffect(() => {
@@ -115,6 +120,30 @@ export default function App() {
       localStorage.removeItem('mane-review-user-profile');
     }
   }, [userProfile]);
+
+  // Keyboard shortcuts for navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Alt + Left Arrow = Back
+      if (e.altKey && e.key === 'ArrowLeft' && canGoBack) {
+        e.preventDefault();
+        handleNavigate('back');
+      }
+      // Alt + Right Arrow = Forward
+      if (e.altKey && e.key === 'ArrowRight' && canGoForward) {
+        e.preventDefault();
+        handleNavigate('forward');
+      }
+      // Alt + Home = Go to home
+      if (e.altKey && e.key === 'Home') {
+        e.preventDefault();
+        handleNavigate('home');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canGoBack, canGoForward]);
 
   // Debug navigation state
   useEffect(() => {
@@ -306,14 +335,21 @@ export default function App() {
   const handleNavigate = (page: string, data?: NavEntry['data']) => {
     console.log('[App] handleNavigate called with:', page, data);
 
+    // Handle back navigation
     if (page === 'back') {
-      setNavStack(prev => {
-        if (prev.length <= 1) {
-          return prev;
-        }
-        return prev.slice(0, -1);
-      });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (navIndex > 0) {
+        setNavIndex(navIndex - 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // Handle forward navigation
+    if (page === 'forward') {
+      if (navIndex < navStack.length - 1) {
+        setNavIndex(navIndex + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       return;
     }
 
@@ -326,7 +362,7 @@ export default function App() {
     console.log('[App] Normalized page:', normalized, 'Current page:', currentEntry.page);
 
     setNavStack(prev => {
-      const current = prev[prev.length - 1];
+      const current = prev[navIndex];
 
       console.log('[App] Navigation check - current:', current.page, 'target:', normalized);
 
@@ -335,16 +371,20 @@ export default function App() {
         // Special cases where we update even on same page
         if (normalized === 'article' && current.data?.slug !== data?.slug) {
           console.log('[App] Different article, navigating');
-          return [...prev, nextEntry];
+          const newStack = prev.slice(0, navIndex + 1);
+          setNavIndex(newStack.length);
+          return [...newStack, nextEntry];
         }
         if (normalized === 'markets' && current.data?.region !== data?.region) {
           console.log('[App] Different market region, navigating');
-          return [...prev, nextEntry];
+          const newStack = prev.slice(0, navIndex + 1);
+          setNavIndex(newStack.length);
+          return [...newStack, nextEntry];
         }
         if (normalized === 'auth' && current.data?.defaultTab !== data?.defaultTab) {
           console.log('[App] Auth page tab change:', current.data?.defaultTab, '->', data?.defaultTab);
           const updated = [...prev];
-          updated[updated.length - 1] = nextEntry;
+          updated[navIndex] = nextEntry;
           return updated;
         }
 
@@ -354,8 +394,11 @@ export default function App() {
       }
 
       // Different pages - navigate normally
+      // Clear forward history when navigating to a new page
       console.log('[App] Navigating from', current.page, 'to', normalized);
-      return [...prev, nextEntry];
+      const newStack = prev.slice(0, navIndex + 1);
+      setNavIndex(newStack.length);
+      return [...newStack, nextEntry];
     });
 
     // Scroll to top after navigation
@@ -446,6 +489,27 @@ export default function App() {
     );
   }
 
+  // Generate breadcrumbs from navigation history
+  const getBreadcrumbs = () => {
+    const pageLabels: Record<string, string> = {
+      home: 'Home',
+      markets: 'Markets',
+      opinion: 'Opinion',
+      watchlist: 'Watchlist',
+      about: 'About',
+      article: 'Article',
+      auth: 'Sign In',
+      admin: 'Admin Dashboard',
+      account: 'My Account'
+    };
+
+    return navStack.slice(0, navIndex + 1).map((entry, index) => ({
+      label: pageLabels[entry.page] || entry.page,
+      page: entry.page,
+      data: entry.data
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header
@@ -456,6 +520,29 @@ export default function App() {
         onRegister={handleRegister}
         onLogout={handleLogout}
       />
+
+      {/* Navigation Controls */}
+      {currentEntry.page !== 'auth' && (
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex items-center justify-between gap-4">
+              <NavigationControls
+                canGoBack={canGoBack}
+                canGoForward={canGoForward}
+                onBack={() => handleNavigate('back')}
+                onForward={() => handleNavigate('forward')}
+                onHome={() => handleNavigate('home')}
+                currentPage={currentEntry.page}
+              />
+              <Breadcrumbs
+                items={getBreadcrumbs()}
+                onNavigate={handleNavigate}
+                className="hidden md:flex"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1">
         {renderPage()}
