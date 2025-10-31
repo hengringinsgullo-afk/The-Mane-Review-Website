@@ -39,7 +39,8 @@ import {
   Star,
   UserCheck,
   Hash,
-  MoreVertical
+  MoreVertical,
+  Trash2
 } from 'lucide-react';
 import { articleOperations, reviewOperations, type DatabaseArticle, type ArticleReview } from '../../lib/supabase';
 import { toast } from 'sonner';
@@ -75,12 +76,30 @@ export function EnhancedArticleReview({
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
+  // Modal states
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewArticle, setPreviewArticle] = useState<ArticleWithReviews | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteArticle, setDeleteArticle] = useState<ArticleWithReviews | null>(null);
+  
   // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewDecision, setReviewDecision] = useState<'approved' | 'rejected' | 'needs_changes' | null>(null);
   const [suggestedTitle, setSuggestedTitle] = useState('');
   const [suggestedExcerpt, setSuggestedExcerpt] = useState('');
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+
+  // Block body scroll when modals are open
+  useEffect(() => {
+    if (showPreviewModal || showDeleteModal || showReviewModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showPreviewModal, showDeleteModal, showReviewModal]);
 
   useEffect(() => {
     loadArticles();
@@ -148,12 +167,14 @@ export function EnhancedArticleReview({
         
         toast.error('Article rejected');
       } else {
+        // needs_changes - keep status as review but add notes
         await articleOperations.updateArticle(selectedArticle.id, {
+          status: 'review', // Keep in review so author can see feedback
           reviewer_id: editorId,
           review_notes: reviewComments
         });
         
-        toast.info('Changes requested');
+        toast.info('Changes requested - Article remains in review');
       }
       
       // Refresh and reset
@@ -432,55 +453,17 @@ export function EnhancedArticleReview({
                       </div>
 
                       <div className="flex flex-col gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-4 w-4 mr-1" />
-                              Preview
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh]">
-                            <DialogHeader>
-                              <DialogTitle className="text-2xl">{article.title}</DialogTitle>
-                            </DialogHeader>
-                            <ScrollArea className="h-[60vh] pr-4">
-                              <div className="space-y-4">
-                                <div className="flex flex-wrap gap-2">
-                                  <Badge>{article.category}</Badge>
-                                  <Badge variant="outline">{article.region}</Badge>
-                                  {article.tags.map((tag, idx) => (
-                                    <Badge key={idx} variant="secondary">{tag}</Badge>
-                                  ))}
-                                </div>
-                                
-                                <div className="text-sm text-muted-foreground">
-                                  By {article.author_name} • {new Date(article.created_at).toLocaleString()}
-                                </div>
-
-                                {article.cover_image && (
-                                  <img 
-                                    src={article.cover_image} 
-                                    alt={article.cover_alt || article.title}
-                                    className="w-full rounded-lg"
-                                  />
-                                )}
-
-                                <div className="prose prose-sm max-w-none">
-                                  <div className="whitespace-pre-wrap">{article.body}</div>
-                                </div>
-
-                                {article.submission_notes && (
-                                  <Alert className="mt-6">
-                                    <MessageSquare className="h-4 w-4" />
-                                    <AlertDescription>
-                                      <strong>Author's Notes:</strong> {article.submission_notes}
-                                    </AlertDescription>
-                                  </Alert>
-                                )}
-                              </div>
-                            </ScrollArea>
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setPreviewArticle(article);
+                            setShowPreviewModal(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Preview
+                        </Button>
 
                         <Button 
                           size="sm"
@@ -489,6 +472,18 @@ export function EnhancedArticleReview({
                         >
                           <Sparkles className="h-4 w-4" />
                           Review
+                        </Button>
+
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => {
+                            setDeleteArticle(article);
+                            setShowDeleteModal(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
                         </Button>
                       </div>
                     </div>
@@ -585,16 +580,145 @@ export function EnhancedArticleReview({
         </TabsContent>
       </Tabs>
 
+      {/* Preview Modal */}
+      {showPreviewModal && previewArticle && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setShowPreviewModal(false)}
+        >
+          <div 
+            className="bg-background rounded-lg shadow-xl w-full max-w-5xl flex flex-col"
+            style={{ maxHeight: '95vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-background border-b p-6 flex-shrink-0 flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">{previewArticle.title}</h2>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowPreviewModal(false)}
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <Badge>{previewArticle.category}</Badge>
+                  <Badge variant="outline">{previewArticle.region}</Badge>
+                  {previewArticle.tags.map((tag, idx) => (
+                    <Badge key={idx} variant="secondary">{tag}</Badge>
+                  ))}
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  By {previewArticle.author_name} • {new Date(previewArticle.created_at).toLocaleString()}
+                </div>
+
+                {previewArticle.cover_image && (
+                  <img 
+                    src={previewArticle.cover_image} 
+                    alt={previewArticle.cover_alt || previewArticle.title}
+                    className="w-full rounded-lg"
+                  />
+                )}
+
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <div className="whitespace-pre-wrap leading-relaxed">{previewArticle.body}</div>
+                </div>
+
+                {previewArticle.submission_notes && (
+                  <Alert className="mt-6">
+                    <MessageSquare className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Author's Notes:</strong> {previewArticle.submission_notes}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && deleteArticle && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div 
+            className="bg-background rounded-lg shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Delete Article?</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Are you sure you want to delete "{deleteArticle.title}"? This action cannot be undone.
+              </p>
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  The author will not be notified of this deletion.
+                </AlertDescription>
+              </Alert>
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={async () => {
+                    try {
+                      await articleOperations.deleteArticle(deleteArticle.id);
+                      toast.success('Article deleted successfully');
+                      setShowDeleteModal(false);
+                      await loadArticles();
+                      onActionComplete?.();
+                    } catch (err) {
+                      toast.error('Failed to delete article');
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Article
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Review Modal */}
-      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Review Article</DialogTitle>
-          </DialogHeader>
-          
-          {selectedArticle && (
-            <ScrollArea className="h-[70vh] pr-4">
-              <div className="space-y-6">
+      {showReviewModal && selectedArticle && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setShowReviewModal(false)}
+        >
+          <div 
+            className="bg-background rounded-lg shadow-xl w-full max-w-3xl flex flex-col"
+            style={{ maxHeight: '95vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-background border-b p-6 flex-shrink-0 flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Review Article</h2>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowReviewModal(false)}
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-6 pb-6">
                 {/* Article Summary */}
                 <Card>
                   <CardHeader>
@@ -754,36 +878,36 @@ export function EnhancedArticleReview({
                   </CardContent>
                 </Card>
               </div>
-            </ScrollArea>
-          )}
+            </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReviewModal(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleReviewSubmit}
-              disabled={
-                submittingReview || 
-                !reviewDecision || 
-                (reviewDecision !== 'approved' && !reviewComments.trim())
-              }
-            >
-              {submittingReview ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Submit Review
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <div className="flex-shrink-0 border-t p-6 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowReviewModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleReviewSubmit}
+                disabled={
+                  submittingReview || 
+                  !reviewDecision || 
+                  (reviewDecision !== 'approved' && !reviewComments.trim())
+                }
+              >
+                {submittingReview ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit Review
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -9,12 +9,13 @@ import { Alert, AlertDescription } from './alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 import { Label } from './label';
 import { PenTool, Upload, CheckCircle2, AlertCircle, Eye, Save } from 'lucide-react';
-import { articleOperations, guidelinesOperations, type DatabaseArticle } from '../../lib/supabase';
+import { articleOperations, guidelinesOperations, supabase, type DatabaseArticle } from '../../lib/supabase';
 import type { Region } from '../../lib/types';
 
 interface ArticleSubmissionFormProps {
   userId?: string;
   userName?: string;
+  userRole?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
   existingArticle?: DatabaseArticle;
@@ -28,7 +29,7 @@ interface SubmissionGuideline {
   order_index: number;
 }
 
-export function ArticleSubmissionForm({ userId, userName, onSuccess, onCancel, existingArticle }: ArticleSubmissionFormProps) {
+export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, onCancel, existingArticle }: ArticleSubmissionFormProps) {
   const [formData, setFormData] = useState({
     title: existingArticle?.title || '',
     excerpt: existingArticle?.excerpt || '',
@@ -97,15 +98,38 @@ export function ArticleSubmissionForm({ userId, userName, onSuccess, onCancel, e
 
   const handleSubmit = async (e: React.FormEvent, saveAsDraft: boolean = false) => {
     e.preventDefault();
+    console.log('[ArticleSubmissionForm] Submit started', { saveAsDraft, wordCount });
     setLoading(true);
     setError(null);
 
     try {
       const validationError = validateForm();
+      console.log('[ArticleSubmissionForm] Validation result:', validationError);
       if (validationError && !saveAsDraft) {
         setError(validationError);
         setLoading(false);
         return;
+      }
+
+      // Get the current user's profile from database
+      console.log('[ArticleSubmissionForm] Getting auth user...');
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      console.log('[ArticleSubmissionForm] Auth user:', authUser?.email, authError);
+      if (authError || !authUser) {
+        throw new Error('You must be logged in to submit articles');
+      }
+
+      // Get the users.id from the users table using auth_id
+      console.log('[ArticleSubmissionForm] Getting user profile for auth_id:', authUser.id);
+      const { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', authUser.id)
+        .single();
+
+      console.log('[ArticleSubmissionForm] User profile:', userProfile, profileError);
+      if (profileError || !userProfile) {
+        throw new Error('User profile not found. Please complete your profile setup.');
       }
 
       const tagsArray = formData.tags
@@ -121,12 +145,14 @@ export function ArticleSubmissionForm({ userId, userName, onSuccess, onCancel, e
         category: formData.category,
         tags: tagsArray,
         author_name: formData.author_name,
-        author_id: userId || formData.author_id,
-        author_role: 'Student',
+        author_id: userProfile.id, // Use users.id (foreign key to users table)
+        author_role: (userRole === 'Admin' || userRole === 'Editor') ? userRole : 'Student',
         submission_notes: formData.submission_notes,
         est_read_min: estimateReadingTime(formData.body),
         status: saveAsDraft ? 'draft' : 'review'
       };
+
+      console.log('[ArticleSubmissionForm] Submitting article:', articleData);
 
       if (existingArticle) {
         await articleOperations.updateArticle(existingArticle.id, articleData);
@@ -134,12 +160,14 @@ export function ArticleSubmissionForm({ userId, userName, onSuccess, onCancel, e
         await articleOperations.submitArticle(articleData);
       }
 
+      console.log('[ArticleSubmissionForm] Article submitted successfully!');
       setSuccess(true);
       setTimeout(() => {
         onSuccess?.();
       }, 2000);
 
     } catch (err) {
+      console.error('[ArticleSubmissionForm] Submit error:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit article');
     } finally {
       setLoading(false);

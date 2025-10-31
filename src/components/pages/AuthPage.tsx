@@ -19,6 +19,8 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', fullName: '', phoneNumber: '', dateOfBirth: '', isStPaulsMember: false, memberType: '', studentForm: '' });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [showResendEmail, setShowResendEmail] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   const formatBrazilianPhone = (value: string) => value.replace(/\D/g, '').slice(0, 11);
   const validateBrazilianPhone = (phone: string) => phone.length === 11;
@@ -57,9 +59,26 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
     setIsLoading(true);
     setError(null);
     setSuccess(null);
+    setShowResendEmail(false);
     try {
       const { data, error } = await authHelpers.signIn(formData.email.trim(), formData.password);
-      if (error) throw new Error(error.message || 'Invalid email or password');
+      if (error) {
+        const errorMessage = error.message || 'Invalid email or password';
+        console.log('Login error details:', { 
+          message: errorMessage, 
+          status: error.status,
+          code: error.code 
+        });
+        
+        // Show resend email option for invalid credentials (might be unverified email)
+        if (errorMessage.toLowerCase().includes('invalid login') || 
+            errorMessage.toLowerCase().includes('invalid credentials') ||
+            errorMessage.toLowerCase().includes('invalid password')) {
+          setShowResendEmail(true);
+          throw new Error('Invalid email or password. If you just created an account, please check your email to verify your account first.');
+        }
+        throw new Error(errorMessage);
+      }
       if (!data?.user) throw new Error('Login failed - please check your credentials');
       setSuccess('Login successful! Redirecting...');
       setIsLoading(false);
@@ -68,6 +87,39 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Failed to login. Please try again.');
       setIsLoading(false);
+    }
+  };
+
+  const handleResendConfirmationEmail = async () => {
+    if (!formData.email || !formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    setIsResendingEmail(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const { error } = await authHelpers.resendConfirmationEmail(formData.email.trim());
+      if (error) {
+        const errorMessage = error.message || 'Failed to resend confirmation email';
+        // Check if it's a rate limit or user not found error
+        if (errorMessage.toLowerCase().includes('rate limit') || errorMessage.toLowerCase().includes('too many')) {
+          throw new Error('Too many requests. Please wait a few minutes before requesting another email.');
+        } else if (errorMessage.toLowerCase().includes('user not found') || errorMessage.toLowerCase().includes('not found')) {
+          throw new Error('No account found with this email address. Please sign up first.');
+        } else if (errorMessage.toLowerCase().includes('already confirmed') || errorMessage.toLowerCase().includes('already verified')) {
+          throw new Error('Your email is already verified. Please try logging in.');
+        }
+        throw new Error(errorMessage);
+      }
+      setSuccess('Confirmation email sent! Please check your inbox (and spam folder).');
+      setShowResendEmail(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resend confirmation email');
+    } finally {
+      setIsResendingEmail(false);
     }
   };
 
@@ -119,6 +171,30 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
                 <div className="space-y-2"><Label>Password</Label><div className="flex items-center gap-3"><Lock className="h-4 w-4 text-muted-foreground" /><Input type="password" placeholder="••••••••" value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} className="flex-1" required /></div></div>
                 <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</>) : ('Sign In')}</Button>
               </form>
+              {showResendEmail && (
+                <Alert className="border-blue-500 bg-blue-50">
+                  <AlertDescription className="flex flex-col gap-2">
+                    <span>Didn't receive the verification email?</span>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleResendConfirmationEmail}
+                      disabled={isResendingEmail}
+                      className="self-start"
+                    >
+                      {isResendingEmail ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Resend Confirmation Email'
+                      )}
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="text-center text-sm text-muted-foreground pt-2">Don't have an account? <button type="button" onClick={() => setActiveTab('signup')} className="text-primary hover:underline font-medium">Create one</button></div>
             </TabsContent>
             <TabsContent value="signup" className="space-y-4">

@@ -126,18 +126,37 @@ export const authHelpers = {
     
     try {
       log('Sign up attempt for:', email);
+      
+      // Get current origin for redirect URL - use same format as working site
+      const redirectUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/auth?verified=true` 
+        : 'http://localhost:3000/auth?verified=true';
+      
+      log('Using redirect URL:', redirectUrl);
+      
       const { data, error } = await client.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
-          data: metadata
+          data: metadata,
+          emailRedirectTo: redirectUrl
         }
       });
       
       if (error) {
-        error('Sign up error:', error);
+        error('Sign up error:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
         return { data: null, error };
       }
+      
+      log('Sign up successful:', {
+        user: data?.user?.email,
+        emailConfirmed: data?.user?.email_confirmed_at ? 'Yes' : 'No',
+        session: data?.session ? 'Created' : 'Not created (email confirmation required)'
+      });
       
       return { data, error: null };
     } catch (err) {
@@ -294,6 +313,49 @@ export const authHelpers = {
     } catch (err) {
       error('Direct API error:', err);
       return { success: false, error: err };
+    }
+  },
+
+  async resendConfirmationEmail(email: string) {
+    log('=== RESEND CONFIRMATION EMAIL ===');
+    log('Email:', email);
+    
+    const client = getSupabaseClient();
+    
+    try {
+      const redirectUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/auth?verified=true` 
+        : 'http://localhost:3000/auth?verified=true';
+      
+      log('Using redirect URL:', redirectUrl);
+      
+      // Use the correct resend API format
+      const { data, error } = await client.auth.resend({
+        type: 'signup',
+        email: email.trim(),
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+      
+      if (error) {
+        error('Resend confirmation email error:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        return { data: null, error };
+      }
+      
+      log('Resend confirmation email successful:', data);
+      return { data, error: null };
+    } catch (err) {
+      error('Resend confirmation email exception:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      return { 
+        data: null, 
+        error: err instanceof Error ? err : new Error(`Failed to resend confirmation email: ${errorMessage}`)
+      };
     }
   }
 };

@@ -42,6 +42,7 @@ export interface MarketQuote {
   peRatio?: number;
   dividendYield?: number;
   lastUpdated: Date;
+  isRealData?: boolean; // Flag to indicate if data is from real API or fallback
 }
 
 export interface CommunityWatchlistItem {
@@ -54,9 +55,16 @@ export interface CommunityWatchlistItem {
 }
 
 export interface UserWatchlistItem {
+  id: string;
   userId: string;
   symbol: string;
+  displayOrder: number;
   createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface WatchlistItemWithQuote extends UserWatchlistItem {
+  quote?: MarketQuote;
 }
 
 export interface MarketIndex {

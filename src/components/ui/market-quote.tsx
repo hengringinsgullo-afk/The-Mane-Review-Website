@@ -14,17 +14,23 @@ export function MarketQuote({ quote, showDetails = false, className = '' }: Mark
   const isPositive = quote.change >= 0;
   const isNeutral = quote.change === 0;
   
+  // Helper function to detect if symbol is Brazilian
+  const isBrazilianStock = (symbol: string) => {
+    return symbol.includes('.SA') || /^[A-Z]{4}[0-9]/.test(symbol);
+  };
+  
   const formatPrice = (price: number) => {
+    const currency = isBrazilianStock(quote.symbol) ? 'R$' : '$';
     if (price >= 1000000000) {
-      return `$${(price / 1000000000).toFixed(2)}B`;
+      return `${currency}${(price / 1000000000).toFixed(2)}B`;
     }
     if (price >= 1000000) {
-      return `$${(price / 1000000).toFixed(2)}M`;
+      return `${currency}${(price / 1000000).toFixed(2)}M`;
     }
     if (price >= 1000) {
-      return `$${(price / 1000).toFixed(2)}K`;
+      return `${currency}${(price / 1000).toFixed(2)}K`;
     }
-    return `$${price.toFixed(2)}`;
+    return `${currency}${price.toFixed(2)}`;
   };
 
   const formatVolume = (volume: number) => {

@@ -183,16 +183,36 @@ export const articleOperations = {
   },
 
   async submitArticle(article: Partial<DatabaseArticle>) {
+    // Generate slug from title if not provided
+    const generateSlug = (title: string): string => {
+      const baseSlug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 80) || 'article';
+      
+      // Always add timestamp and random string to ensure uniqueness
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 6);
+      return `${baseSlug}-${timestamp}-${random}`;
+    };
+    
+    const slug = article.slug || generateSlug(article.title || 'untitled');
+    
     const { data, error } = await supabase
       .from('articles')
       .insert([{
         ...article,
-        status: 'review' // Submit directly for review
+        slug,
+        status: article.status || 'review' // Use provided status or default to review
       }])
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Article submission error:', error);
+      throw error;
+    }
     return data;
   },
 
@@ -355,5 +375,214 @@ export const adminOperations = {
       pendingReviews: reviewsResult.count || 0,
       publishedToday: publishedToday || 0
     };
+  }
+};
+
+// Watchlist operations
+export interface WatchlistItem {
+  id: string;
+  user_id: string;
+  symbol: string;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export const watchlistOperations = {
+  // Helper function to get users.id from auth.uid()
+  async getUserIdFromAuthId(authId: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_id', authId)
+      .single();
+    
+    if (error || !data) {
+      throw new Error('User profile not found. Please complete your profile setup.');
+    }
+    
+    return data.id;
+  },
+
+  // Get user's watchlist
+  async getUserWatchlist(userId: string) {
+    // Get authenticated user ID directly from session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('You must be logged in to view your watchlist');
+    }
+    
+    // Get the users.id from auth.uid()
+    const usersTableId = await this.getUserIdFromAuthId(session.user.id);
+    
+    const { data, error } = await supabase
+      .from('user_watchlist')
+      .select('*')
+      .eq('user_id', usersTableId) // Use users.id (not auth.uid())
+      .order('display_order', { ascending: true });
+    
+    if (error) throw error;
+    return data as WatchlistItem[];
+  },
+
+  // Add symbol to watchlist
+  async addToWatchlist(userId: string, symbol: string) {
+    // Get authenticated user ID directly from session - ignore userId parameter
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error('No active session:', sessionError);
+      throw new Error('You must be logged in to add symbols to your watchlist');
+    }
+
+    // Get the users.id from auth.uid() - foreign key points to users.id, not auth.uid()
+    const usersTableId = await this.getUserIdFromAuthId(session.user.id);
+    
+    console.log('Adding symbol to watchlist:', {
+      authId: session.user.id,
+      usersTableId,
+      providedUserId: userId,
+      symbol: symbol.toUpperCase()
+    });
+
+    // Get current max display_order for the authenticated user
+    const { data: existing, error: queryError } = await supabase
+      .from('user_watchlist')
+      .select('display_order')
+      .eq('user_id', usersTableId) // Use users.id
+      .order('display_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (queryError) {
+      console.error('Error querying existing watchlist:', queryError);
+      // Continue anyway - might be first item
+    }
+
+    const nextOrder = existing?.display_order !== undefined ? existing.display_order + 1 : 0;
+
+    // Insert with users.id - foreign key constraint requires users.id
+    const { data, error } = await supabase
+      .from('user_watchlist')
+      .insert([{
+        user_id: usersTableId, // Use users.id (foreign key constraint)
+        symbol: symbol.toUpperCase(),
+        display_order: nextOrder
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding to watchlist:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        authId: session.user.id,
+        usersTableId
+      });
+      
+      // If duplicate, just return existing
+      if (error.code === '23505') {
+        const { data: existingItem } = await supabase
+          .from('user_watchlist')
+          .select('*')
+          .eq('user_id', usersTableId)
+          .eq('symbol', symbol.toUpperCase())
+          .single();
+        return existingItem;
+      }
+      throw error;
+    }
+    
+    return data as WatchlistItem;
+  },
+
+  // Remove symbol from watchlist
+  async removeFromWatchlist(userId: string, symbol: string) {
+    // Get authenticated user ID directly from session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('You must be logged in to remove symbols from your watchlist');
+    }
+    
+    // Get the users.id from auth.uid()
+    const usersTableId = await this.getUserIdFromAuthId(session.user.id);
+    
+    const { error } = await supabase
+      .from('user_watchlist')
+      .delete()
+      .eq('user_id', usersTableId) // Use users.id
+      .eq('symbol', symbol.toUpperCase());
+    
+    if (error) throw error;
+  },
+
+  // Reorder watchlist items
+  async reorderWatchlist(userId: string, orderedSymbols: string[]) {
+    // Get authenticated user ID directly from session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('You must be logged in to reorder your watchlist');
+    }
+    
+    // Get the users.id from auth.uid()
+    const usersTableId = await this.getUserIdFromAuthId(session.user.id);
+    
+    const updates = orderedSymbols.map((symbol, index) => ({
+      symbol: symbol.toUpperCase(),
+      display_order: index
+    }));
+
+    // Update each item
+    const promises = updates.map(({ symbol, display_order }) =>
+      supabase
+        .from('user_watchlist')
+        .update({ display_order })
+        .eq('user_id', usersTableId) // Use users.id
+        .eq('symbol', symbol)
+    );
+
+    const results = await Promise.all(promises);
+    
+    // Check for errors
+    const errors = results.filter(r => r.error);
+    if (errors.length > 0) {
+      throw errors[0].error;
+    }
+  },
+
+  // Get community watchlist (most tracked symbols)
+  async getCommunityWatchlist(limit: number = 20) {
+    const { data, error } = await supabase.rpc('get_symbol_tracking_count');
+    
+    if (error) throw error;
+    
+    // Get community watchlist items
+    const { data: communityItems, error: communityError } = await supabase
+      .from('community_watchlist')
+      .select('*')
+      .eq('active', true)
+      .order('display_order', { ascending: true })
+      .limit(limit);
+    
+    if (communityError) throw communityError;
+    
+    // Merge with tracking counts
+    const trackingMap = new Map((data || []).map((item: any) => [item.symbol, item.tracking_count]));
+    
+    return (communityItems || []).map((item: any) => ({
+      ...item,
+      trackingCount: trackingMap.get(item.symbol) || 0
+    }));
+  },
+
+  // Get most tracked symbols across all users
+  async getMostTrackedSymbols(limit: number = 10) {
+    const { data, error } = await supabase.rpc('get_symbol_tracking_count');
+    
+    if (error) throw error;
+    
+    return (data || []).slice(0, limit);
   }
 };

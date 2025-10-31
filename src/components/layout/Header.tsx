@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
-import { Menu, User, Shield } from 'lucide-react';
+import { Menu, User, Shield, Bell } from 'lucide-react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Badge } from '../ui/badge';
+import { articleOperations } from '../../lib/supabase';
 
 interface HeaderProps { currentPage: string; onNavigate: (page: string, data?: any) => void; user?: { name: string; role: string } | null; onLogin: () => void; onRegister: () => void; onLogout: () => void; }
 
@@ -12,6 +14,27 @@ const navLinks = [{ name: 'Home', path: '/', label: 'Home' }, { name: 'Markets',
 
 export function Header({ currentPage, onNavigate, user, onLogin, onRegister, onLogout }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingReviewCount, setPendingReviewCount] = useState(0);
+
+  useEffect(() => {
+    // Load pending review count for Admins and Editors
+    if (user && (user.role === 'Admin' || user.role === 'Editor')) {
+      loadPendingReviews();
+      
+      // Refresh count every 30 seconds
+      const interval = setInterval(loadPendingReviews, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const loadPendingReviews = async () => {
+    try {
+      const articles = await articleOperations.getArticlesUnderReview();
+      setPendingReviewCount(articles.length);
+    } catch (error) {
+      console.error('Failed to load pending reviews:', error);
+    }
+  };
 
   const NavLink = ({ name, path, label, mobile = false }: { name: string; path: string; label: string; mobile?: boolean }) => {
     const isActive = currentPage === name.toLowerCase();
@@ -41,7 +64,7 @@ export function Header({ currentPage, onNavigate, user, onLogin, onRegister, onL
           </div>
           <nav className="hidden md:flex items-center space-x-1">{navLinks.map((link) => (<NavLink key={link.name} {...link} />))}</nav>
           <div className="flex items-center space-x-4">
-            {user ? (<DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="relative h-8 w-8 rounded-full"><Avatar className="h-8 w-8"><AvatarFallback className="bg-secondary text-secondary-foreground">{user.name.charAt(0).toUpperCase()}</AvatarFallback></Avatar></Button></DropdownMenuTrigger><DropdownMenuContent className="w-56" align="end" forceMount><div className="flex flex-col space-y-1 p-2"><p className="text-sm font-medium">{user.name}</p><p className="text-xs text-muted-foreground">{user.role}</p></div><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onNavigate('account')}><User className="h-4 w-4 mr-2" />My Account</DropdownMenuItem><DropdownMenuItem onClick={() => onNavigate('watchlist')}>My Watchlist</DropdownMenuItem>{user?.role === 'Admin' && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onNavigate('admin')}><Shield className="h-4 w-4 mr-2" />Admin Dashboard</DropdownMenuItem></>)}<DropdownMenuSeparator /><DropdownMenuItem onClick={onLogout}>Log out</DropdownMenuItem></DropdownMenuContent></DropdownMenu>) : (<div className="hidden md:flex items-center space-x-2"><Button variant="ghost" onClick={onLogin}>Login</Button><Button onClick={onRegister}>Register</Button></div>)}
+            {user ? (<DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="relative h-8 w-8 rounded-full"><Avatar className="h-8 w-8"><AvatarFallback className="bg-secondary text-secondary-foreground">{user.name.charAt(0).toUpperCase()}</AvatarFallback></Avatar>{pendingReviewCount > 0 && (user.role === 'Admin' || user.role === 'Editor') && (<span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">{pendingReviewCount}</span>)}</Button></DropdownMenuTrigger><DropdownMenuContent className="w-56" align="end" forceMount><div className="flex flex-col space-y-1 p-2"><p className="text-sm font-medium">{user.name}</p><p className="text-xs text-muted-foreground">{user.role}</p></div><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onNavigate('account')}><User className="h-4 w-4 mr-2" />My Account</DropdownMenuItem><DropdownMenuItem onClick={() => onNavigate('watchlist')}>My Watchlist</DropdownMenuItem>{(user?.role === 'Admin' || user?.role === 'Editor') && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={() => onNavigate('admin')} className="relative"><Shield className="h-4 w-4 mr-2" />{user.role === 'Admin' ? 'Admin Dashboard' : 'Review Dashboard'}{pendingReviewCount > 0 && (<Badge variant="destructive" className="ml-auto">{pendingReviewCount}</Badge>)}</DropdownMenuItem></>)}<DropdownMenuSeparator /><DropdownMenuItem onClick={onLogout}>Log out</DropdownMenuItem></DropdownMenuContent></DropdownMenu>) : (<div className="hidden md:flex items-center space-x-2"><Button variant="ghost" onClick={onLogin}>Login</Button><Button onClick={onRegister}>Register</Button></div>)}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}><SheetTrigger asChild><Button variant="ghost" className="md:hidden" size="icon"><Menu className="h-5 w-5" /><span className="sr-only">Toggle menu</span></Button></SheetTrigger><SheetContent side="right" className="w-[300px] sm:w-[400px] rounded-l-3xl"><div className="flex flex-col space-y-6 mt-8"><nav className="flex flex-col space-y-3">{navLinks.map((link) => (<NavLink key={link.name} {...link} mobile />))}</nav>{!user && (<div className="border-t pt-6 flex flex-col space-y-3"><Button variant="ghost" onClick={() => { onLogin(); setMobileMenuOpen(false); }} className="rounded-xl h-12">Login</Button><Button onClick={() => { onRegister(); setMobileMenuOpen(false); }} className="rounded-xl h-12">Register</Button></div>)}</div></SheetContent></Sheet>
           </div>
         </div>

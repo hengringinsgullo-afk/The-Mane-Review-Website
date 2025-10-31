@@ -40,25 +40,70 @@ export class MarketDataService {
   static async getStockQuote(symbol: string): Promise<MarketQuote> {
     try {
       const data = await this.makeRequest(`/stock-data/quote/${symbol}`);
+      console.log(`✅ Quote data for ${symbol}:`, data);
+      
+      if (!data || !data.quote) {
+        console.error(`❌ No quote data returned for ${symbol}`);
+        throw new Error(`No quote data returned for ${symbol}`);
+      }
+      
+      // Validate quote structure
+      if (!data.quote.symbol || data.quote.price === undefined) {
+        console.error(`❌ Invalid quote structure for ${symbol}`);
+        throw new Error(`Invalid quote structure for ${symbol}`);
+      }
+      
+      // Log whether data is real or simulated
+      if (data.quote.isRealData === false) {
+        console.warn(`⚠️ ${symbol}: Edge Function returned SIMULATED data`);
+      } else if (data.quote.isRealData === true) {
+        console.log(`✅ ${symbol}: Edge Function returned REAL data from Alpha Vantage`);
+      }
+      
       return data.quote;
-    } catch (error) {
-      console.error(`Error fetching quote for ${symbol}:`, error);
-      // Return a more realistic fallback
-      return fallbackQuote(symbol, this.getCompanyName(symbol));
+    } catch (error: any) {
+      console.error(`❌ Error fetching quote for ${symbol}:`, error);
+      throw error; // Don't use fallback, let the error bubble up
     }
   }
 
-  static async getMultipleStockQuotes(symbols: string[]): Promise<MarketQuote[]> {
+  static async getMultipleStockQuotes(symbols: string[], forceRefresh: boolean = false): Promise<MarketQuote[]> {
     try {
-      const data = await this.makeRequest('/stock-data/quotes', {
+      console.log('📡 Requesting quotes for symbols:', symbols, forceRefresh ? '(FORCE REFRESH - NO CACHE)' : '');
+      const data = await this.makeRequest(`/stock-data/quotes${forceRefresh ? `?nocache=${Date.now()}` : ''}`, {
         method: 'POST',
         body: JSON.stringify({ symbols }),
       });
-      return data.quotes;
-    } catch (error) {
-      console.error('Error fetching multiple stock quotes:', error);
-      // Return realistic fallbacks for all symbols
-      return symbols.map(symbol => fallbackQuote(symbol, this.getCompanyName(symbol)));
+      
+      console.log('📥 Quotes response:', data);
+      
+      if (!data || !data.quotes || !Array.isArray(data.quotes)) {
+        console.error('❌ Invalid quotes response');
+        throw new Error('Invalid quotes response from API');
+      }
+      
+      // Validate quotes but DON'T use frontend fallback
+      const quotes: MarketQuote[] = [];
+      for (let i = 0; i < symbols.length; i++) {
+        const quote = data.quotes[i];
+        if (quote && quote.symbol && quote.price !== undefined) {
+          // Log data source
+          if (quote.isRealData === false) {
+            console.warn(`⚠️ ${quote.symbol}: Edge Function returned SIMULATED data (rate limit or API issue)`);
+          } else if (quote.isRealData === true) {
+            console.log(`✅ ${quote.symbol}: REAL data from Alpha Vantage`);
+          }
+          quotes.push(quote);
+        } else {
+          console.error(`❌ Invalid quote for ${symbols[i]}`);
+          throw new Error(`Invalid quote for ${symbols[i]}`);
+        }
+      }
+      
+      return quotes;
+    } catch (error: any) {
+      console.error('❌ Error fetching multiple stock quotes:', error);
+      throw error; // Don't use fallback, let the error bubble up
     }
   }
 
