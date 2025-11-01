@@ -503,7 +503,21 @@ export default function App() {
       account: 'My Account'
     };
 
-    return navStack.slice(0, navIndex + 1).map((entry, index) => ({
+    // Get current navigation path
+    const fullPath = navStack.slice(0, navIndex + 1);
+    
+    // Remove consecutive duplicates
+    const uniquePath = fullPath.filter((entry, index) => {
+      if (index === 0) return true;
+      return entry.page !== fullPath[index - 1].page;
+    });
+
+    // Show only last 3 items (or all if less than 3)
+    const limitedPath = uniquePath.length > 3 
+      ? uniquePath.slice(-3) 
+      : uniquePath;
+
+    return limitedPath.map((entry, index) => ({
       label: pageLabels[entry.page] || entry.page,
       page: entry.page,
       data: entry.data

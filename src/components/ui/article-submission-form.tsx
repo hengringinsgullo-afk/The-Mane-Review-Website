@@ -49,6 +49,7 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
   const [guidelines, setGuidelines] = useState<SubmissionGuideline[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [wordCount, setWordCount] = useState(0);
+  const [requestAiImage, setRequestAiImage] = useState(false);
 
   useEffect(() => {
     const words = formData.body.trim().split(/\s+/).length;
@@ -167,6 +168,8 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
         body: formData.body,
         region: formData.region,
         category: formData.category,
+        request_ai_image: requestAiImage,
+        ai_image_status: requestAiImage ? 'pending' : null,
         tags: tagsArray,
         author_name: formData.author_name,
         author_id: userProfile.id, // Use users.id (foreign key to users table)
@@ -176,7 +179,11 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
         status: saveAsDraft ? 'draft' : 'review'
       };
 
-      console.log('[ArticleSubmissionForm] Submitting article:', articleData);
+      console.log('[ArticleSubmissionForm] Submitting article with AI image request:', {
+        request_ai_image: requestAiImage,
+        ai_image_status: requestAiImage ? 'pending' : null,
+        title: articleData.title
+      });
 
       if (existingArticle) {
         await articleOperations.updateArticle(existingArticle.id, articleData);
@@ -390,6 +397,34 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
                 rows={3}
               />
             </div>
+
+            {/* AI Image Generation Option */}
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="request_ai_image"
+                    checked={requestAiImage}
+                    onChange={(e) => setRequestAiImage(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="request_ai_image" className="cursor-pointer font-semibold">
+                      ✨ Generate Featured Image with AI
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Our AI will automatically create a professional, custom image for your article after it's approved for publication. 
+                      The image will be generated using Google's Gemini AI based on your article's content.
+                    </p>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      <span className="font-medium">How it works:</span> After editorial approval, our AI analyses your article 
+                      and generates a unique, high-quality featured image that captures the essence of your content.
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="flex flex-col sm:flex-row gap-2 justify-end">
               {onCancel && (

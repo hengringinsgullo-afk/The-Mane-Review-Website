@@ -369,7 +369,7 @@ export function AdminDashboard({ onNavigate, currentUser }: AdminDashboardProps)
 
       {/* Enhanced Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -382,6 +382,10 @@ export function AdminDashboard({ onNavigate, currentUser }: AdminDashboardProps)
                 {stats.pendingReviews}
               </Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="articles" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Articles</span>
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />

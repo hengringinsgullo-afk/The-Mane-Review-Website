@@ -1,5 +1,6 @@
 // RE-EXPORT from the fixed version to maintain compatibility
 export { supabaseFixed as supabase, authHelpers } from './supabase-auth-fix';
+export type { DatabaseArticle, ArticleReview } from './types';
 import { supabaseFixed } from './supabase-auth-fix';
 
 // Keep the same interface for backward compatibility
@@ -237,6 +238,8 @@ export const articleOperations = {
     if (error) throw error;
   }
 };
+
+
 
 // User operations
 export const userOperations = {

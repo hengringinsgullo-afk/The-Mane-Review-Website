@@ -3,12 +3,11 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { ArticleCard } from '../ui/article-card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
-import { GraduationCap, Users, ExternalLink, FileText, User, PenTool, Plus } from 'lucide-react';
+import { GraduationCap, Users, ExternalLink, PenTool, Plus, Trash2 } from 'lucide-react';
 import { mockArticles } from '../../lib/data';
 import { articleOperations } from '../../lib/supabase';
 import { ArticleSubmissionForm } from '../ui/article-submission-form';
+import { toast } from 'sonner';
 import type { Article } from '../../lib/types';
 
 interface OpinionPageProps { 
@@ -24,12 +23,16 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
   const [publishedArticles, setPublishedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSubmissionForm, setShowSubmissionForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
+  
+  const isAdmin = user?.role === 'Admin';
 
   useEffect(() => {
     console.log('[OpinionPage] showSubmissionForm changed:', showSubmissionForm);
     
     // Block body scroll when modal is open
-    if (showSubmissionForm) {
+    if (showSubmissionForm || showDeleteModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -39,7 +42,7 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showSubmissionForm]);
+  }, [showSubmissionForm, showDeleteModal]);
 
   useEffect(() => { 
     loadPublishedArticles(); 
@@ -94,6 +97,21 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
   
   const articlesForGrid = showAll ? allOpinionArticles : allOpinionArticles.slice(0, 6);
 
+  const handleDeleteArticle = async () => {
+    if (!articleToDelete) return;
+    
+    try {
+      await articleOperations.deleteArticle(articleToDelete.id);
+      toast.success('Article deleted successfully');
+      setShowDeleteModal(false);
+      setArticleToDelete(null);
+      await loadPublishedArticles();
+    } catch (error) {
+      console.error('Failed to delete article:', error);
+      toast.error('Failed to delete article');
+    }
+  };
+
   const renderBrowseTab = () => (
     <>
       <section className="space-y-10">
@@ -116,11 +134,26 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
         ) : articlesForGrid.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {articlesForGrid.map((article) => (
-              <ArticleCard 
-                key={article.id} 
-                article={article} 
-                onClick={(slug) => onNavigate('article', { slug })} 
-              />
+              <div key={article.id} className="relative group">
+                <ArticleCard 
+                  article={article} 
+                  onClick={(slug) => onNavigate('article', { slug })} 
+                />
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setArticleToDelete(article);
+                      setShowDeleteModal(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             ))}
           </div>
         ) : (
@@ -238,6 +271,42 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
       <div className="space-y-8">
         {renderBrowseTab()}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && articleToDelete && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div 
+            className="bg-background rounded-lg shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Delete Article?</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Are you sure you want to delete "{articleToDelete.title}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={handleDeleteArticle}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Article
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Article Submission Modal */}
       {showSubmissionForm && user && (

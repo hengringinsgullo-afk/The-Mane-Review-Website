@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Supabase Storage</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Test Supabase Storage Upload</h1>
+  <button onclick="testUpload()">Test Upload</button>
+  <div id="result"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://dlpfkrqvptlgtampkqvd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRscGZrcnF2cHRsZ3RhbXBrcXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMzM3MzUsImV4cCI6MjA3MzcwOTczNX0.IuZBEKMBV1lXinuxB31zmNjGa79fsCk5ujFU4VIUfoo';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function testUpload() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = 'Testing...';
+
+      try {
+        // Create a simple test image (1x1 red pixel PNG)
+        const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+        
+        // Convert to blob
+        const byteCharacters = atob(testImageBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/png' });
+
+        console.log('Blob created:', blob.size, 'bytes');
+
+        // Try to upload
+        const fileName = `test-${Date.now()}.png`;
+        console.log('Uploading to article-images bucket...');
+
+        const { data, error } = await supabase.storage
+          .from('article-images')
+          .upload(fileName, blob, {
+            contentType: 'image/png',
+            upsert: false
+          });
+
+        if (error) {
+          console.error('Upload error:', error);
+          resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p><pre>${JSON.stringify(error, null, 2)}</pre>`;
+          return;
+        }
+
+        console.log('Upload successful:', data);
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('article-images')
+          .getPublicUrl(fileName);
+
+        console.log('Public URL:', publicUrl);
+
+        resultDiv.innerHTML = `
+          <p style="color: green;">✅ Upload successful!</p>
+          <p>File: ${fileName}</p>
+          <p>URL: <a href="${publicUrl}" target="_blank">${publicUrl}</a></p>
+          <img src="${publicUrl}" style="border: 1px solid #ccc; margin-top: 10px;">
+        `;
+
+      } catch (err) {
+        console.error('Test error:', err);
+        resultDiv.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

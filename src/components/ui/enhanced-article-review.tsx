@@ -42,8 +42,9 @@ import {
   MoreVertical,
   Trash2
 } from 'lucide-react';
-import { articleOperations, reviewOperations, type DatabaseArticle, type ArticleReview } from '../../lib/supabase';
+import { articleOperations, reviewOperations, supabase, type DatabaseArticle, type ArticleReview } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { generateArticleImage, uploadImageToStorage } from '../../lib/gemini-image-service';
 
 interface EnhancedArticleReviewProps {
   editorId?: string;
@@ -54,6 +55,11 @@ interface EnhancedArticleReviewProps {
 
 interface ArticleWithReviews extends DatabaseArticle {
   reviews?: ArticleReview[];
+  // Explicitly include AI fields for TypeScript
+  request_ai_image?: boolean;
+  ai_image_url?: string | null;
+  ai_image_prompt?: string | null;
+  ai_image_status?: 'pending' | 'generating' | 'completed' | 'failed' | null;
 }
 
 export function EnhancedArticleReview({ 
@@ -110,6 +116,13 @@ export function EnhancedArticleReview({
       setLoading(true);
       const allArticles = await articleOperations.getArticlesUnderReview();
       
+      console.log('[Review] Loaded articles:', allArticles.map(a => ({
+        id: a.id,
+        title: a.title,
+        request_ai_image: a.request_ai_image,
+        ai_image_status: a.ai_image_status
+      })));
+      
       // Load reviews for each article
       const articlesWithReviews = await Promise.all(
         allArticles.map(async (article) => {
@@ -128,6 +141,58 @@ export function EnhancedArticleReview({
       setError(err instanceof Error ? err.message : 'Failed to load articles');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateAIImageForArticle = async (article: ArticleWithReviews) => {
+    try {
+      console.log('[AI Image] Starting generation for article:', article.id);
+      
+      // Update status to generating
+      await articleOperations.updateArticle(article.id, {
+        ai_image_status: 'generating'
+      } as any);
+
+      // Generate the image using Gemini
+      const { imageUrl, prompt } = await generateArticleImage({
+        title: article.title,
+        excerpt: article.excerpt || '',
+        body: article.body,
+        category: article.category,
+        region: article.region,
+        tags: article.tags
+      });
+
+      console.log('[AI Image] Image generated, uploading to storage...');
+
+      // Upload to Supabase Storage if it's a base64 image
+      let finalImageUrl = imageUrl;
+      if (imageUrl.startsWith('data:image')) {
+        finalImageUrl = await uploadImageToStorage(imageUrl, article.id, supabase);
+      }
+
+      // Update article with image URL and prompt
+      // Also set cover_image so the image appears in the article
+      await articleOperations.updateArticle(article.id, {
+        cover_image: finalImageUrl,  // Set as cover image
+        cover_alt: `AI generated image for: ${article.title}`,
+        ai_image_url: finalImageUrl,
+        ai_image_prompt: prompt,
+        ai_image_status: 'completed'
+      } as any);
+
+      console.log('[AI Image] Generation completed successfully, URL:', finalImageUrl);
+      toast.success('✨ AI image generated and set as cover image!');
+
+    } catch (error) {
+      console.error('[AI Image] Generation error:', error);
+      
+      // Update status to failed
+      await articleOperations.updateArticle(article.id, {
+        ai_image_status: 'failed'
+      } as any);
+
+      throw error;
     }
   };
 
@@ -158,6 +223,27 @@ export function EnhancedArticleReview({
         });
         
         toast.success('Article approved and published!');
+
+        // Generate AI image if requested
+        console.log('[Review] Checking AI image generation:', {
+          request_ai_image: selectedArticle.request_ai_image,
+          ai_image_status: selectedArticle.ai_image_status
+        });
+        
+        if (selectedArticle.request_ai_image && selectedArticle.ai_image_status === 'pending') {
+          console.log('[Review] Starting AI image generation...');
+          toast.info('🎨 Generating AI image for article...');
+          
+          // Start image generation in background (don't wait for it)
+          generateAIImageForArticle(selectedArticle).catch(error => {
+            console.error('[AI Image] Generation failed:', error);
+            toast.error('Failed to generate AI image, but article was published successfully');
+          });
+        } else {
+          console.log('[Review] AI image generation not triggered:', {
+            reason: !selectedArticle.request_ai_image ? 'Not requested' : 'Status not pending'
+          });
+        }
       } else if (reviewDecision === 'rejected') {
         await articleOperations.updateArticle(selectedArticle.id, {
           status: 'rejected',
@@ -536,16 +622,30 @@ export function EnhancedArticleReview({
                         </div>
                       </div>
                       
-                      {article.status === 'published' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onNavigateToArticle?.(article.slug)}
+                      <div className="flex flex-col gap-2">
+                        {article.status === 'published' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onNavigateToArticle?.(article.slug)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Live
+                          </Button>
+                        )}
+                        
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => {
+                            setDeleteArticle(article);
+                            setShowDeleteModal(true);
+                          }}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Live
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
                         </Button>
-                      )}
+                      </div>
                     </div>
 
                     {article.reviews && article.reviews.length > 0 && (
