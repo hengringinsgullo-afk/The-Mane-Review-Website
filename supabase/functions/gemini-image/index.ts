@@ -133,14 +133,7 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    // Extract path after the function name
-    const pathParts = url.pathname.split('/');
-    const functionIndex = pathParts.indexOf('gemini-image');
-    const path = functionIndex >= 0 && pathParts.length > functionIndex + 1 
-      ? '/' + pathParts.slice(functionIndex + 1).join('/')
-      : '/';
-
-    console.log('Request path:', path, 'Full pathname:', url.pathname);
+    const path = url.pathname.replace('/functions/v1/gemini-image', '');
 
     // Generate image prompt endpoint
     if (req.method === 'POST' && path === '/prompt') {
