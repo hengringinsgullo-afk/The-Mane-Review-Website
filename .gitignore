@@ -38,3 +38,5 @@ Thumbs.db
 # Test files with hardcoded keys
 test-gemini.js
 test-storage.html
+*.local.js
+*.local.html
