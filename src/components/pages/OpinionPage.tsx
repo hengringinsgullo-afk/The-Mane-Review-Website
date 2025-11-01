@@ -259,12 +259,12 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
   );
 
   return (
-    <div className="container mx-auto px-4 py-12 space-y-16">
-      <div className="text-center space-y-8">
-        <h1 className="font-bold text-primary leading-none mb-6" style={{ fontFamily: 'var(--font-headline)', fontSize: '75px' }}>
+    <div className="container mx-auto px-4 py-8 sm:py-12 space-y-12 sm:space-y-16">
+      <div className="text-center space-y-4 sm:space-y-8">
+        <h1 className="font-bold text-primary leading-none mb-4 sm:mb-6 text-4xl sm:text-6xl lg:text-7xl" style={{ fontFamily: 'var(--font-headline)' }}>
           Opinion
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
           Essays on markets, investing, and economic thinking written by St. Paul's School students and guided by our editorial team.
         </p>
       </div>
@@ -272,32 +272,33 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
         {renderBrowseTab()}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal - Mobile Optimized */}
       {showDeleteModal && articleToDelete && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setShowDeleteModal(false)}
         >
           <div 
-            className="bg-background rounded-lg shadow-xl w-full max-w-md"
+            className="bg-background rounded-lg shadow-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Delete Article?</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Are you sure you want to delete "{articleToDelete.title}"? This action cannot be undone.
+            <div className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Delete Article?</h2>
+              <p className="text-sm text-muted-foreground mb-4 sm:mb-6">
+                Are you sure you want to delete "<span className="font-medium">{articleToDelete.title}</span>"? This action cannot be undone.
               </p>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
                 <Button 
                   variant="outline" 
                   onClick={() => setShowDeleteModal(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button 
                   variant="destructive"
                   onClick={handleDeleteArticle}
+                  className="w-full sm:w-auto"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Article
@@ -308,29 +309,22 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
         </div>
       )}
 
-      {/* Article Submission Modal */}
+      {/* Article Submission Modal - Mobile Optimized */}
       {showSubmissionForm && user && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-          style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            overflow: 'hidden'
-          }}
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-hidden"
           onClick={() => setShowSubmissionForm(false)}
         >
           <div 
-            className="bg-background rounded-lg shadow-xl w-full max-w-4xl flex flex-col"
-            style={{ 
-              maxHeight: '90vh',
-              overflow: 'hidden'
-            }}
+            className="bg-background rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-background border-b p-6 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">Submit Article for Review</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+            {/* Header - Fixed */}
+            <div className="bg-background border-b px-4 py-3 sm:p-6 flex-shrink-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-xl font-semibold truncate">Submit Article</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
                     Fill out the form below to submit your opinion piece for editorial review.
                   </p>
                 </div>
@@ -338,13 +332,15 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
                   variant="ghost" 
                   size="sm"
                   onClick={() => setShowSubmissionForm(false)}
-                  className="shrink-0"
+                  className="shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-9"
                 >
-                  ✕
+                  <span className="text-lg">✕</span>
                 </Button>
               </div>
             </div>
-            <div className="p-6 overflow-y-auto flex-1">
+            
+            {/* Content - Scrollable */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 overscroll-contain">
               <ArticleSubmissionForm 
                 userId={user.id} 
                 userName={user.name || user.email} 
