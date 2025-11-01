@@ -34,3 +34,7 @@ lerna-debug.log*
 # OS
 Thumbs.db
 .kiro/
+
+# Test files with hardcoded keys
+test-gemini.js
+test-storage.html
