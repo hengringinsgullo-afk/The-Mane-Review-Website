@@ -367,27 +367,29 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-6 md:space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="font-bold text-primary leading-none mb-6" style={{ fontFamily: 'var(--font-headline)', fontSize: '75px' }}>
+        <h1 className="font-bold text-primary leading-none mb-4 md:mb-6 text-4xl md:text-6xl lg:text-7xl" style={{ fontFamily: 'var(--font-headline)' }}>
           Watchlist
         </h1>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 justify-center border-b">
+      <div className="flex gap-2 justify-center border-b pb-2 overflow-x-auto">
         <Button
           variant={activeTab === 'personal' ? 'default' : 'ghost'}
           onClick={() => setActiveTab('personal')}
+          className="whitespace-nowrap"
         >
           My Watchlist
         </Button>
         <Button
           variant={activeTab === 'community' ? 'default' : 'ghost'}
           onClick={() => setActiveTab('community')}
+          className="whitespace-nowrap"
         >
           <Users className="h-4 w-4 mr-2" />
-          Community Watchlist
+          <span className="hidden sm:inline">Community </span>Watchlist
         </Button>
       </div>
 
@@ -395,15 +397,15 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
         <>
           {/* Add Symbol */}
           <Card>
-            <CardHeader>
-              <CardTitle>Add to Watchlist</CardTitle>
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Add to Watchlist</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="relative">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
                     <Input
-                      placeholder="Search ticker (e.g., AAPL, Apple, PETR4)"
+                      placeholder="Search ticker (e.g., AAPL, PETR4)"
                       value={newSymbol}
                       onChange={(e) => {
                         setNewSymbol(e.target.value.toUpperCase());
@@ -433,13 +435,17 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
                       <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
                   </div>
-                  <Button onClick={addSymbol} disabled={addingSymbol || !newSymbol.trim()}>
+                  <Button 
+                    onClick={addSymbol} 
+                    disabled={addingSymbol || !newSymbol.trim()}
+                    className="w-full sm:w-auto"
+                  >
                     {addingSymbol ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : (
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-4 w-4 mr-2" />
                     )}
-                    Add
+                    Add to Watchlist
                   </Button>
                 </div>
                 
@@ -478,8 +484,8 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
 
           {/* Search */}
           {watchlistItems.length > 0 && (
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+              <div className="relative flex-1 sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search tickers..."
@@ -492,9 +498,11 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
                 variant="outline"
                 onClick={refreshQuotes}
                 disabled={refreshing}
+                className="w-full sm:w-auto"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
+                <span className="sm:hidden">Refresh Quotes</span>
               </Button>
             </div>
           )}
@@ -518,10 +526,109 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
               </CardContent>
             </Card>
           ) : (
-            <Card>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
+            <>
+              {/* Mobile Card View (iPhone optimized) */}
+              <div className="block md:hidden space-y-3">
+                {getSortedItems().length === 0 ? (
+                  <Card>
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      No symbols match your search
+                    </CardContent>
+                  </Card>
+                ) : (
+                  getSortedItems().map((item) => (
+                    <Card key={item.id} className="overflow-hidden">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-bold">{item.symbol}</h3>
+                              {item.quote && item.quote.isRealData === false && (
+                                <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300">
+                                  Simulado
+                                </Badge>
+                              )}
+                              {item.quote && item.quote.isRealData === true && (
+                                <Badge variant="default" className="text-xs bg-green-600">
+                                  Real
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {item.quote?.name || 'Loading...'}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSymbol(item.symbol)}
+                            className="ml-2 -mr-2 -mt-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Price</p>
+                            <p className="text-lg font-semibold">
+                              {item.loading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                formatPrice(item.quote?.price, item.symbol)
+                              )}
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Change</p>
+                            {item.quote && (
+                              <div className="flex items-center gap-1">
+                                <Badge
+                                  variant={item.quote.changePercent >= 0 ? 'default' : 'destructive'}
+                                  className="text-sm"
+                                >
+                                  {item.quote.changePercent >= 0 ? '+' : ''}
+                                  {item.quote.changePercent.toFixed(2)}%
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Change Value</p>
+                            {item.quote && (
+                              <div className={`flex items-center gap-1 text-sm font-medium ${
+                                item.quote.change >= 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {item.quote.change >= 0 ? (
+                                  <TrendingUp className="h-3 w-3" />
+                                ) : (
+                                  <TrendingDown className="h-3 w-3" />
+                                )}
+                                {formatPrice(item.quote.change, item.symbol)}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Volume</p>
+                            <p className="text-sm font-medium">
+                              {item.quote ? formatNumber(item.quote.volume) : 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table View */}
+              <Card className="hidden md:block">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12"></TableHead>
@@ -652,32 +759,115 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
                         ))
                       )}
                     </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
           )}
         </>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Most Tracked Symbols
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Symbols tracked by the most users in the community
-            </p>
-          </CardHeader>
-          <CardContent>
-            {communityWatchlist.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                Loading community watchlist...
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
+        <>
+          <Card className="block md:hidden">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="h-5 w-5" />
+                Most Tracked Symbols
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Symbols tracked by the most users
+              </p>
+            </CardHeader>
+            <CardContent>
+              {communityWatchlist.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  Loading community watchlist...
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {communityWatchlist.map((item) => (
+                    <Card key={item.symbol} className="overflow-hidden">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-bold">{item.symbol}</h3>
+                              <Badge variant="outline" className="text-xs">
+                                <Users className="h-3 w-3 mr-1" />
+                                {item.trackingCount}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {item.quote?.name || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Price</p>
+                            <p className="text-lg font-semibold">
+                              {formatPrice(item.quote?.price, item.symbol)}
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Change</p>
+                            {item.quote && (
+                              <Badge
+                                variant={item.quote.changePercent >= 0 ? 'default' : 'destructive'}
+                                className="text-sm"
+                              >
+                                {item.quote.changePercent >= 0 ? '+' : ''}
+                                {item.quote.changePercent.toFixed(2)}%
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="col-span-2">
+                            <p className="text-xs text-muted-foreground mb-1">Change Value</p>
+                            {item.quote && (
+                              <div className={`flex items-center gap-1 text-sm font-medium ${
+                                item.quote.change >= 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {item.quote.change >= 0 ? (
+                                  <TrendingUp className="h-3 w-3" />
+                                ) : (
+                                  <TrendingDown className="h-3 w-3" />
+                                )}
+                                {formatPrice(item.quote.change, item.symbol)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hidden md:block">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Most Tracked Symbols
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Symbols tracked by the most users in the community
+              </p>
+            </CardHeader>
+            <CardContent>
+              {communityWatchlist.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  Loading community watchlist...
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Symbol</TableHead>
@@ -727,11 +917,12 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );

@@ -21,6 +21,7 @@ import { authHelpers, userOperations, supabase } from './lib/supabase';
 import { getCurrentUserWithProfile } from './lib/auth-utils';
 import { toast } from 'sonner';
 import type { Region } from './lib/types';
+import { addDeviceClasses, optimizeIOSViewport, logDeviceInfo, onOrientationChange } from './utils/device-detection';
 
 type Page = 'home' | 'markets' | 'opinion' | 'watchlist' | 'about' | 'article' | 'auth' | 'admin' | 'authtest' | 'account' | 'authdebug';
 
@@ -158,6 +159,27 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentEntry.page]);
+
+  // Initialize device optimizations
+  useEffect(() => {
+    // Add device-specific classes to body
+    addDeviceClasses();
+    
+    // Optimize viewport for iOS
+    optimizeIOSViewport();
+    
+    // Log device info in development
+    if (import.meta.env.DEV) {
+      logDeviceInfo();
+    }
+    
+    // Listen for orientation changes
+    const cleanup = onOrientationChange((orientation) => {
+      console.log('[App] Orientation changed to:', orientation);
+    });
+    
+    return cleanup;
+  }, []);
 
   // Check for existing session on mount
   useEffect(() => {

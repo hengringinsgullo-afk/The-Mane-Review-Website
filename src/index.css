@@ -2574,3 +2574,314 @@ html {
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
 }
+
+
+/* ============================================
+   iPhone 17 Pro Max & Mobile Optimizations
+   ============================================ */
+
+/* Safe area insets for notch and home indicator */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* Header safe area */
+  header {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  /* Footer safe area */
+  footer {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Smooth scrolling for iOS */
+html {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Optimize tap targets for touch */
+button, a, input, select, textarea {
+  min-height: 44px; /* Apple's recommended minimum touch target */
+  min-width: 44px;
+}
+
+/* Remove tap highlight on iOS */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Improve font rendering on iOS */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* iPhone 17 Pro Max specific (430x932px) */
+@media only screen 
+  and (device-width: 430px) 
+  and (device-height: 932px) 
+  and (-webkit-device-pixel-ratio: 3) {
+  
+  /* Optimize container padding */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Optimize text sizes for readability */
+  body {
+    font-size: 16px; /* Prevent zoom on input focus */
+  }
+  
+  /* Optimize card spacing */
+  .card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* General mobile optimizations (all iPhones and mobile devices) */
+@media (max-width: 768px) {
+  /* Optimize container width */
+  .container {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Optimize typography for mobile */
+  h1 {
+    font-size: 1.875rem !important; /* 30px */
+    line-height: 1.2 !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important; /* 24px */
+    line-height: 1.3 !important;
+  }
+  
+  h3 {
+    font-size: 1.25rem !important; /* 20px */
+    line-height: 1.4 !important;
+  }
+  
+  p, li {
+    font-size: 1rem !important; /* 16px */
+    line-height: 1.6 !important;
+  }
+  
+  /* Optimize spacing */
+  .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  .space-y-8 > * + * {
+    margin-top: 2rem !important;
+  }
+  
+  /* Optimize padding */
+  .p-8 {
+    padding: 1.5rem !important;
+  }
+  
+  .p-6 {
+    padding: 1rem !important;
+  }
+  
+  .py-20 {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+  }
+  
+  .py-16 {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+  
+  /* Optimize images */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* Optimize buttons for touch */
+  button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  /* Optimize inputs for touch */
+  input, textarea, select {
+    font-size: 16px !important; /* Prevent zoom on focus */
+    padding: 0.75rem;
+    min-height: 48px;
+  }
+  
+  /* Optimize cards */
+  .card {
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  
+  /* Optimize grid layouts */
+  .grid {
+    gap: 1rem !important;
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Optimize navigation */
+  nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  nav::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Optimize modals and dialogs */
+  [role="dialog"] {
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+/* Landscape mode optimizations for iPhone */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reduce vertical spacing in landscape */
+  .py-20 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  
+  .py-16 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+  
+  .space-y-8 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  /* Optimize header in landscape */
+  header {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Dark mode optimizations for OLED screens (iPhone Pro models) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* True black for OLED power savings */
+    --background: 0 0% 0%;
+    --card: 0 0% 5%;
+  }
+  
+  /* Reduce brightness for better battery life */
+  img {
+    opacity: 0.95;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  * {
+    border-width: 2px !important;
+  }
+  
+  button, a {
+    text-decoration: underline;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Optimize touch interactions */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover states on touch devices */
+  *:hover {
+    /* Hover styles disabled on touch devices */
+  }
+  
+  /* Optimize active states for touch */
+  button:active, a:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+
+/* Fix iOS 100vh issue using custom property */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+/* Optimize full-height containers for iOS */
+.h-screen {
+  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+}
+
+/* Device-specific optimizations using classes */
+.is-iphone-17-pro-max {
+  /* Specific optimizations for iPhone 17 Pro Max */
+}
+
+.is-iphone {
+  /* General iPhone optimizations */
+}
+
+.is-mobile {
+  /* Mobile-specific styles */
+}
+
+.has-notch {
+  /* Styles for devices with notch */
+}
+
+/* Orientation-specific styles */
+.orientation-landscape {
+  /* Landscape mode styles */
+}
+
+.orientation-portrait {
+  /* Portrait mode styles */
+}
