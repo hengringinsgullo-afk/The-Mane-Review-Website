@@ -120,7 +120,7 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
             New Articles
           </h2>
           <p className="text-muted-foreground max-w-2xl">
-            Explore the latest finance and investing perspectives from our St. Paul's contributors.
+            Explore the latest finance and investing perspectives from our contributors.
           </p>
         </div>
 
@@ -183,7 +183,7 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">
-            Our opinion section elevates thoughtful analysis and original investment takes from St. Paul's School students. 
+            Our opinion section elevates thoughtful analysis and original investment takes from students. 
             These voices bring an academic rigor and first-hand perspective to complex financial topics.
           </p>
           <div className="flex flex-wrap gap-2">
@@ -209,7 +209,7 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
             <div>
               <h4 className="font-medium mb-2">For Students</h4>
               <p className="text-sm text-muted-foreground mb-3">
-                St. Paul's School students can submit opinion pieces on financial markets, investment trends, 
+                Students can submit opinion pieces on financial markets, investment trends, 
                 and economic policy for review and publication.
               </p>
               <ul className="text-sm text-muted-foreground space-y-1">
@@ -265,7 +265,7 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
           Opinion
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
-          Essays on markets, investing, and economic thinking written by St. Paul's School students and guided by our editorial team.
+          Essays on markets, investing, and economic thinking written by students and guided by our editorial team.
         </p>
       </div>
       <div className="space-y-8">

@@ -78,7 +78,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           <div>
             <div className="w-32 h-1 bg-secondary mb-4"></div>
             <h2 className="text-3xl font-bold text-primary mb-2" style={{ fontFamily: 'var(--font-headline)' }}>From Opinion</h2>
-            <p className="text-muted-foreground">Insights and perspectives from our student contributors at St. Paul's School</p>
+            <p className="text-muted-foreground">Insights and perspectives from our student contributors</p>
           </div>
           <Button variant="ghost" onClick={() => onNavigate('opinion')} className="text-secondary hover:text-secondary/80">View all<ChevronRight className="ml-2 h-4 w-4" /></Button>
         </div>

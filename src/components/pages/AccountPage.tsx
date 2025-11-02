@@ -147,7 +147,7 @@ export function AccountPage({ onNavigate, user }: AccountPageProps) {
 
             <Card className="shadow-sm">
               <CardHeader className="pb-6">
-                <CardTitle className="text-xl">St. Paul's School Information</CardTitle>
+                <CardTitle className="text-xl">Account Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
