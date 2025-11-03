@@ -260,11 +260,11 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8 sm:py-12 space-y-12 sm:space-y-16">
-      <div className="text-center space-y-4 sm:space-y-8">
-        <h1 className="font-bold text-primary leading-none mb-4 sm:mb-6 text-4xl sm:text-6xl lg:text-7xl" style={{ fontFamily: 'var(--font-headline)' }}>
+      <div className="text-center space-y-6">
+        <h1 className="font-bold text-primary leading-none mb-6" style={{ fontFamily: 'var(--font-headline)', fontSize: '75px' }}>
           Opinion
         </h1>
-        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
+        <p className="text-muted-foreground max-w-2xl mx-auto">
           Essays on markets, investing, and economic thinking written by students and guided by our editorial team.
         </p>
       </div>
