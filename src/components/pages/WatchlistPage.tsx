@@ -368,7 +368,7 @@ export function WatchlistPage({ user, onNavigate }: WatchlistPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6 md:space-y-8">
+    <div className="container mx-auto px-4 py-12 space-y-8">
       <div className="text-center space-y-6">
         <h1 className="font-bold text-primary leading-none mb-6" style={{ fontFamily: 'var(--font-headline)', fontSize: '75px' }}>
           Watchlist
