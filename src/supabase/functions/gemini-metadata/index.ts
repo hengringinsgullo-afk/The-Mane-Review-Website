@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const GOOGLE_API_KEY = Deno.env.get('GOOGLE_API_KEY')
+const GOOGLE_API_KEY = Deno.env.get('VITE_GOOGLE_API_KEY') || Deno.env.get('GOOGLE_API_KEY')
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent'
 
 const corsHeaders = {
