@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Edge Function Direct</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #f5f5f5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+        .success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Edge Function - Direct Fetch</h1>
+    <p>This tests the gemini-metadata Edge Function using direct fetch (no Supabase client)</p>
+    
+    <button onclick="testDirect()">Test Direct Fetch</button>
+    <button onclick="testWithSupabase()">Test With Supabase Client</button>
+    
+    <div id="result"></div>
+
+    <script type="module">
+        const SUPABASE_URL = 'https://dlpfkrqvptlgtampkqvd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRscGZrcnF2cHRsZ3RhbXBrcXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMzM3MzUsImV4cCI6MjA3MzcwOTczNX0.IuZBEKMBV1lXinuxB31zmNjGa79fsCk5ujFU4VIUfoo';
+
+        window.testDirect = async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = '';
+            resultDiv.textContent = 'Testing direct fetch...\n\n';
+
+            try {
+                const url = `${SUPABASE_URL}/functions/v1/gemini-metadata`;
+                
+                resultDiv.textContent += `URL: ${url}\n\n`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    },
+                    body: JSON.stringify({
+                        articleBody: 'The Federal Reserve announced today a significant shift in monetary policy, raising interest rates by 50 basis points in response to persistent inflation concerns. This marks the largest single increase in over two decades and signals the central bank\'s commitment to price stability. Market analysts predict this move will have far-reaching implications for both equity and bond markets, with particular impact on growth stocks and real estate sectors. Investors should carefully consider portfolio rebalancing strategies in light of this new rate environment.',
+                        region: 'USA',
+                        category: 'Markets'
+                    })
+                });
+
+                resultDiv.textContent += `Status: ${response.status} ${response.statusText}\n\n`;
+                
+                const data = await response.json();
+                resultDiv.textContent += `Response:\n${JSON.stringify(data, null, 2)}`;
+                
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.textContent += `\nError: ${error.message}\n${error.stack}`;
+            }
+        };
+
+        window.testWithSupabase = async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = '';
+            resultDiv.textContent = 'Testing with Supabase client...\n\n';
+
+            try {
+                // Import Supabase
+                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+                
+                const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                resultDiv.textContent += 'Supabase client created\n\n';
+                
+                const { data, error } = await supabase.functions.invoke('gemini-metadata', {
+                    body: {
+                        articleBody: 'The Federal Reserve announced today a significant shift in monetary policy, raising interest rates by 50 basis points in response to persistent inflation concerns. This marks the largest single increase in over two decades and signals the central bank\'s commitment to price stability. Market analysts predict this move will have far-reaching implications for both equity and bond markets, with particular impact on growth stocks and real estate sectors. Investors should carefully consider portfolio rebalancing strategies in light of this new rate environment.',
+                        region: 'USA',
+                        category: 'Markets'
+                    }
+                });
+
+                if (error) {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent += `Error: ${error.message}\n${JSON.stringify(error, null, 2)}`;
+                } else {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent += `Success!\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.textContent += `\nError: ${error.message}\n${error.stack}`;
+            }
+        };
+    </script>
+</body>
+</html>

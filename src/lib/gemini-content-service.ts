@@ -3,7 +3,12 @@
  * Generates article titles and tags using Google's Gemini AI via Supabase Edge Function
  */
 
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+
+// Create a separate client for Edge Functions without custom fetch
+const supabaseUrl = `https://${projectId}.supabase.co`;
+const edgeFunctionClient = createClient(supabaseUrl, publicAnonKey);
 
 interface ContentSuggestions {
   title: string;
@@ -24,7 +29,7 @@ export async function generateArticleMetadata(
   }
 
   try {
-    const { data, error } = await supabase.functions.invoke('gemini-metadata', {
+    const { data, error } = await edgeFunctionClient.functions.invoke('gemini-metadata', {
       body: {
         articleBody,
         region,
