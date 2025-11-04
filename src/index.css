@@ -2906,6 +2906,7 @@ body.modal-open {
   overflow: hidden !important;
   position: fixed;
   width: 100%;
+  height: 100%;
 }
 
 /* Optimize modal content for mobile */
@@ -2936,4 +2937,25 @@ body.modal-open {
   [class*="fixed"][class*="inset-0"][class*="bg-black"] {
     background-color: rgba(0, 0, 0, 0.85) !important;
   }
+}
+
+/* Ensure textarea and inputs work properly in modals */
+textarea, input {
+  touch-action: manipulation;
+}
+
+/* Fix for modal scrolling on all devices */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Ensure flex containers in modals work properly */
+.flex-col {
+  min-height: 0;
+}
+
+.flex-1 {
+  min-height: 0;
+  min-width: 0;
 }

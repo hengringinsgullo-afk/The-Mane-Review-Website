@@ -8,8 +8,10 @@ import { Badge } from './badge';
 import { Alert, AlertDescription } from './alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 import { Label } from './label';
-import { PenTool, Upload, CheckCircle2, AlertCircle, Eye, Save } from 'lucide-react';
+import { PenTool, Upload, CheckCircle2, AlertCircle, Eye, Save, Sparkles, Loader2 } from 'lucide-react';
 import { articleOperations, guidelinesOperations, supabase, type DatabaseArticle } from '../../lib/supabase';
+import { generateArticleMetadata, isGeminiConfigured } from '../../lib/gemini-content-service';
+import { toast } from 'sonner';
 import type { Region } from '../../lib/types';
 
 interface ArticleSubmissionFormProps {
@@ -50,6 +52,9 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
   const [showPreview, setShowPreview] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [requestAiImage, setRequestAiImage] = useState(false);
+  const [generatingMetadata, setGeneratingMetadata] = useState(false);
+  const [generatingTitle, setGeneratingTitle] = useState(false);
+  const [generatingTags, setGeneratingTags] = useState(false);
 
   useEffect(() => {
     const words = formData.body.trim().split(/\s+/).length;
@@ -94,6 +99,113 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
   const generateExcerpt = (text: string) => {
     const words = text.trim().split(/\s+/).slice(0, 30);
     return words.join(' ') + (words.length >= 30 ? '...' : '');
+  };
+
+  const handleGenerateMetadata = async () => {
+    if (!formData.body || formData.body.trim().length < 100) {
+      toast.error('Please write at least 100 characters of content first');
+      return;
+    }
+
+    if (!isGeminiConfigured()) {
+      toast.error('AI generation is not configured. Please contact an administrator.');
+      return;
+    }
+
+    setGeneratingMetadata(true);
+    try {
+      toast.info('Generating title and tags with AI...', { duration: 2000 });
+      
+      const suggestions = await generateArticleMetadata(
+        formData.body,
+        formData.region,
+        formData.category
+      );
+
+      setFormData(prev => ({
+        ...prev,
+        title: suggestions.title,
+        tags: suggestions.tags.join(', '),
+        excerpt: suggestions.excerpt || prev.excerpt
+      }));
+
+      toast.success('Title and tags generated successfully!');
+    } catch (error) {
+      console.error('[ArticleSubmissionForm] Generate metadata error:', error);
+      toast.error('Failed to generate metadata. Please try again.');
+    } finally {
+      setGeneratingMetadata(false);
+    }
+  };
+
+  const handleGenerateTitle = async () => {
+    if (!formData.body || formData.body.trim().length < 100) {
+      toast.error('Please write at least 100 characters of content first');
+      return;
+    }
+
+    if (!isGeminiConfigured()) {
+      toast.error('AI generation is not configured. Please contact an administrator.');
+      return;
+    }
+
+    setGeneratingTitle(true);
+    try {
+      toast.info('Generating title with AI...', { duration: 2000 });
+      
+      const suggestions = await generateArticleMetadata(
+        formData.body,
+        formData.region,
+        formData.category
+      );
+
+      setFormData(prev => ({
+        ...prev,
+        title: suggestions.title
+      }));
+
+      toast.success('Title generated successfully!');
+    } catch (error) {
+      console.error('[ArticleSubmissionForm] Generate title error:', error);
+      toast.error('Failed to generate title. Please try again.');
+    } finally {
+      setGeneratingTitle(false);
+    }
+  };
+
+  const handleGenerateTags = async () => {
+    if (!formData.body || formData.body.trim().length < 100) {
+      toast.error('Please write at least 100 characters of content first');
+      return;
+    }
+
+    if (!isGeminiConfigured()) {
+      toast.error('AI generation is not configured. Please contact an administrator.');
+      return;
+    }
+
+    setGeneratingTags(true);
+    try {
+      toast.info('Generating tags with AI...', { duration: 2000 });
+      
+      const suggestions = await generateArticleMetadata(
+        formData.body,
+        formData.region,
+        formData.category
+      );
+
+      setFormData(prev => ({
+        ...prev,
+        tags: suggestions.tags.join(', ')
+      }));
+
+      toast.success('Tags generated successfully!');
+    } catch (error) {
+      console.error('[ArticleSubmissionForm] Generate tags error:', error);
+      toast.error('Failed to generate tags. Please try again.');
+    } finally {
+      setGeneratingTags(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent, saveAsDraft: boolean = false) => {
@@ -162,22 +274,22 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
-      const articleData: Partial<DatabaseArticle> = {
+      const articleData = {
         title: formData.title,
         excerpt: formData.excerpt || generateExcerpt(formData.body),
         body: formData.body,
         region: formData.region,
         category: formData.category,
         request_ai_image: requestAiImage,
-        ai_image_status: requestAiImage ? 'pending' : null,
+        ai_image_status: requestAiImage ? ('pending' as const) : null,
         tags: tagsArray,
         author_name: formData.author_name,
         author_id: userProfile.id, // Use users.id (foreign key to users table)
         author_role: (userRole === 'Admin' || userRole === 'Editor') ? userRole : 'Student',
         submission_notes: formData.submission_notes,
         est_read_min: estimateReadingTime(formData.body),
-        status: saveAsDraft ? 'draft' : 'review'
-      };
+        status: (saveAsDraft ? 'draft' : 'review') as 'draft' | 'review'
+      } as Partial<DatabaseArticle>;
 
       console.log('[ArticleSubmissionForm] Submitting article with AI image request:', {
         request_ai_image: requestAiImage,
@@ -220,7 +332,7 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
 
   if (success) {
     return (
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full">
         <CardContent className="p-8 text-center">
           <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">Article Submitted Successfully!</h3>
@@ -234,7 +346,7 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       {/* Guidelines Card */}
       <Card className="border-primary/20">
         <CardHeader>
@@ -308,12 +420,34 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">Article Title</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="title">Article Title</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateTitle}
+                  disabled={generatingTitle || !formData.body || formData.body.length < 100}
+                  className="h-7 text-xs"
+                >
+                  {generatingTitle ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Generate with AI
+                    </>
+                  )}
+                </Button>
+              </div>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Enter your article title"
+                placeholder="Enter your article title or generate with AI"
                 required
               />
             </div>
@@ -337,7 +471,29 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tags">Tags (comma separated)</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tags">Tags (comma separated)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateTags}
+                  disabled={generatingTags || !formData.body || formData.body.length < 100}
+                  className="h-7 text-xs"
+                >
+                  {generatingTags ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Generate with AI
+                    </>
+                  )}
+                </Button>
+              </div>
               <Input
                 id="tags"
                 value={formData.tags}
@@ -386,6 +542,46 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
                 Recommended: 800-1500 words. Maximum: 2000 words. Current: {wordCount} words
               </div>
             </div>
+
+            {/* AI Metadata Generation */}
+            {isGeminiConfigured() && (
+              <Card className="border-primary/20 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20">
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        <h4 className="font-semibold text-primary">AI-Powered Metadata</h4>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Let our AI analyse your article and generate a professional title and relevant tags in British English.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Write at least 100 characters of content first, then click to generate.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleGenerateMetadata}
+                      disabled={generatingMetadata || !formData.body || formData.body.length < 100}
+                      className="shrink-0"
+                    >
+                      {generatingMetadata ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Generate Title & Tags
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="submission_notes">Notes for Editors (optional)</Label>

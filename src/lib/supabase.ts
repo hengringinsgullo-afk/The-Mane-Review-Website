@@ -126,6 +126,8 @@ export interface DatabaseArticle {
   submission_notes?: string;
   review_notes?: string;
   reviewer_id?: string;
+  request_ai_image?: boolean;
+  ai_image_status?: 'pending' | 'generating' | 'completed' | 'failed' | null;
 }
 
 export interface DatabaseUser {

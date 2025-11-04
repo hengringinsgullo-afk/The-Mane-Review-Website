@@ -16,6 +16,7 @@ import { AdminDashboard } from './components/pages/AdminDashboard';
 import { AuthTest } from './components/pages/AuthTest';
 import { AccountPage } from './components/pages/AccountPage';
 import { AuthDebug } from './components/pages/AuthDebug';
+import { SubmitArticlePage } from './components/pages/SubmitArticlePage';
 import { Toaster } from './components/ui/sonner';
 import { authHelpers, userOperations, supabase } from './lib/supabase';
 import { getCurrentUserWithProfile } from './lib/auth-utils';
@@ -23,7 +24,7 @@ import { toast } from 'sonner';
 import type { Region } from './lib/types';
 import { addDeviceClasses, optimizeIOSViewport, logDeviceInfo, onOrientationChange } from './utils/device-detection';
 
-type Page = 'home' | 'markets' | 'opinion' | 'watchlist' | 'about' | 'article' | 'auth' | 'admin' | 'authtest' | 'account' | 'authdebug';
+type Page = 'home' | 'markets' | 'opinion' | 'watchlist' | 'about' | 'article' | 'auth' | 'admin' | 'authtest' | 'account' | 'authdebug' | 'submit-article';
 
 interface NavEntry {
   page: Page;
@@ -58,6 +59,8 @@ const resolvePage = (target: string): Page => {
       return 'account';
     case 'authdebug':
       return 'authdebug';
+    case 'submit-article':
+      return 'submit-article';
     default:
       return 'home';
   }
@@ -472,6 +475,8 @@ export default function App() {
         return <AccountPage onNavigate={handleNavigate} user={userProfile} />;
       case 'authdebug':
         return <AuthDebug />;
+      case 'submit-article':
+        return <SubmitArticlePage onNavigate={handleNavigate} user={userProfile} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

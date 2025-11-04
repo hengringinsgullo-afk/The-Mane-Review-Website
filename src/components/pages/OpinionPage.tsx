@@ -6,7 +6,6 @@ import { ArticleCard } from '../ui/article-card';
 import { GraduationCap, Users, ExternalLink, PenTool, Plus, Trash2 } from 'lucide-react';
 import { mockArticles } from '../../lib/data';
 import { articleOperations } from '../../lib/supabase';
-import { ArticleSubmissionForm } from '../ui/article-submission-form';
 import { toast } from 'sonner';
 import type { Article } from '../../lib/types';
 
@@ -22,27 +21,27 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
   const [showAll, setShowAll] = useState(false);
   const [publishedArticles, setPublishedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
   
   const isAdmin = user?.role === 'Admin';
 
   useEffect(() => {
-    console.log('[OpinionPage] showSubmissionForm changed:', showSubmissionForm);
-    
     // Block body scroll when modal is open
-    if (showSubmissionForm || showDeleteModal) {
+    if (showDeleteModal) {
+      document.body.classList.add('modal-open');
       document.body.style.overflow = 'hidden';
     } else {
+      document.body.classList.remove('modal-open');
       document.body.style.overflow = 'unset';
     }
     
     // Cleanup on unmount
     return () => {
+      document.body.classList.remove('modal-open');
       document.body.style.overflow = 'unset';
     };
-  }, [showSubmissionForm, showDeleteModal]);
+  }, [showDeleteModal]);
 
   useEffect(() => { 
     loadPublishedArticles(); 
@@ -228,7 +227,7 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
                   </p>
                   <Button 
                     className="w-full flex items-center gap-2"
-                    onClick={() => setShowSubmissionForm(true)}
+                    onClick={() => onNavigate('submit-article')}
                   >
                     <Plus className="h-4 w-4" />
                     Submit Article
@@ -275,15 +274,16 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
       {/* Delete Confirmation Modal - Mobile Optimized */}
       {showDeleteModal && articleToDelete && (
         <div 
-          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
           onClick={() => setShowDeleteModal(false)}
         >
           <div 
-            className="bg-background rounded-lg shadow-2xl w-full max-w-md"
+            className="bg-card rounded-lg shadow-2xl w-full max-w-md border"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Delete Article?</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-card-foreground">Delete Article?</h2>
               <p className="text-sm text-muted-foreground mb-4 sm:mb-6">
                 Are you sure you want to delete "<span className="font-medium">{articleToDelete.title}</span>"? This action cannot be undone.
               </p>
@@ -309,52 +309,6 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
         </div>
       )}
 
-      {/* Article Submission Modal - Mobile Optimized */}
-      {showSubmissionForm && user && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-hidden"
-          onClick={() => setShowSubmissionForm(false)}
-        >
-          <div 
-            className="bg-background rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header - Fixed */}
-            <div className="bg-background border-b px-4 py-3 sm:p-6 flex-shrink-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg sm:text-xl font-semibold truncate">Submit Article</h2>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
-                    Fill out the form below to submit your opinion piece for editorial review.
-                  </p>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setShowSubmissionForm(false)}
-                  className="shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-9"
-                >
-                  <span className="text-lg">✕</span>
-                </Button>
-              </div>
-            </div>
-            
-            {/* Content - Scrollable */}
-            <div className="p-4 sm:p-6 overflow-y-auto flex-1 overscroll-contain">
-              <ArticleSubmissionForm 
-                userId={user.id} 
-                userName={user.name || user.email} 
-                userRole={user.role}
-                onSuccess={() => { 
-                  setShowSubmissionForm(false); 
-                  loadPublishedArticles(); 
-                }} 
-                onCancel={() => setShowSubmissionForm(false)} 
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
