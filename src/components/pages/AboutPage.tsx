@@ -100,7 +100,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                 </div>
                 <div className="bg-muted/30 p-6 rounded-lg">
                   <h4 className="text-lg font-semibold mb-2">Leo Gaz</h4>
-                  <Badge className="mb-3">Founder and Director</Badge>
+                  <Badge className="mb-3">Founder and Executive Director</Badge>
                   <p className="text-muted-foreground leading-relaxed">
                     Leo is responsible for ensuring efficient operation of The Mane Review. His role encompasses overseeing the editorial process, maintaining the functionality of the website, and providing direction for the platform. He is not solely a Leader, but a part of the team because he, and The Mane Review, understand that this is all only possible through collaboration.
                   </p>
