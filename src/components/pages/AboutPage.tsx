@@ -95,7 +95,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                   <h4 className="text-lg font-semibold mb-2">Henrique Gullo</h4>
                   <Badge className="mb-3">Founder and Executive Director</Badge>
                   <p className="text-muted-foreground leading-relaxed">
-                    Henrique is responsible for guiding the strategic vision and overall direction of The Mane Review. His role encompasses leading the editorial process, driving website development, and shaping the platform's future. He is not solely a Leader, but a part of the team because he, and The Mane Review, understand that this is all only possible through collaboration.
+                    Henrique is responsible for guiding the strategic vision and overall direction of The Mane Review. From conceptualizing new initiatives to steering editorial standards and technical development, he works to expand the platform's reach and impact. He is not solely a Leader, but a part of the team because he, and The Mane Review, understand that this is all only possible through collaboration.
                   </p>
                 </div>
                 <div className="bg-muted/30 p-6 rounded-lg">
