@@ -78,7 +78,74 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
           </CardContent>
         </Card>
       </section>
-      <section className="space-y-10"><Card><CardHeader><CardTitle className="flex items-center space-x-2"><Award className="h-6 w-6 text-secondary" /><span>Who We Are</span></CardTitle></CardHeader><CardContent className="space-y-6"><div className="grid gap-6"><div className="bg-muted/30 p-6 rounded-lg"><h4 className="text-lg font-semibold mb-2">Henrique Gullo</h4><Badge className="mb-3">Founder and Director</Badge><p className="text-muted-foreground leading-relaxed">Henrique founded The Mane Review with a vision to make financial markets more accessible to everyone. With a passion for education and a deep understanding of global markets, he leads our editorial team in creating content that bridges the gap between academic finance and practical investing knowledge.</p></div><div className="bg-muted/30 p-6 rounded-lg"><h4 className="text-lg font-semibold mb-2">Leo Gaz</h4><Badge className="mb-3">Founder and Director</Badge><p className="text-muted-foreground leading-relaxed">Leo oversees the day-to-day editorial operations at The Mane Review, ensuring content quality and consistency across all publications. His experience gained through various internships provides valuable industry insights that help guide our editorial direction and mentor our team of contributors in delivering insightful and educational content to our readers.</p></div></div><div className="space-y-4"><h4 className="font-medium">Our Team</h4><div className="grid md:grid-cols-2 gap-4"><div className="p-4 border rounded-lg"><h5 className="font-medium mb-1">Editorial Team</h5><p className="text-sm text-muted-foreground">Experienced editors and market analysts who ensure content quality and accuracy.</p></div><div className="p-4 border rounded-lg"><h5 className="font-medium mb-1">Student Contributors</h5><p className="text-sm text-muted-foreground">Talented students who bring fresh perspectives to financial analysis.</p></div><div className="p-4 border rounded-lg"><h5 className="font-medium mb-1">Investment Club</h5><p className="text-sm text-muted-foreground">A dedicated group that curates our community watchlist and provides market insights.</p></div><div className="p-4 border rounded-lg"><h5 className="font-medium mb-1">Advisory Board</h5><p className="text-sm text-muted-foreground">Industry professionals who guide our editorial standards and strategic direction.</p></div></div></div></CardContent></Card></section>
+      <section className="space-y-10">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Award className="h-6 w-6 text-secondary" />
+              <span>Who We Are</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            {/* Leadership */}
+            <div className="space-y-4">
+              <h4 className="text-xl font-semibold">Leadership</h4>
+              <div className="grid gap-6">
+                <div className="bg-muted/30 p-6 rounded-lg">
+                  <h4 className="text-lg font-semibold mb-2">Henrique Gullo</h4>
+                  <Badge className="mb-3">Founder and Director</Badge>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Henrique founded The Mane Review with a vision to make financial markets more accessible to everyone. With a passion for education and a deep understanding of global markets, he leads our editorial team in creating content that bridges the gap between academic finance and practical investing knowledge.
+                  </p>
+                </div>
+                <div className="bg-muted/30 p-6 rounded-lg">
+                  <h4 className="text-lg font-semibold mb-2">Leo Gaz</h4>
+                  <Badge className="mb-3">Founder and Director</Badge>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Leo oversees the day-to-day editorial operations at The Mane Review, ensuring content quality and consistency across all publications. His experience gained through various internships provides valuable industry insights that help guide our editorial direction and mentor our team of contributors in delivering insightful and educational content to our readers.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Core Team */}
+            <div className="space-y-4">
+              <h4 className="text-xl font-semibold">Our Team</h4>
+              <div className="grid gap-6">
+                <div className="bg-muted/30 p-6 rounded-lg">
+                  <h4 className="text-lg font-semibold mb-2">Ana Clara Herndl</h4>
+                  <Badge className="mb-3">Chief Marketing Officer</Badge>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Ana Clara manages The Mane Review's Instagram presence, overseeing social media strategy and community engagement. With a keen eye for design and content creation, she ensures our online content makes finance accessible and engaging. She also helps bring The Mane Review to more readers, using creativity and consistency to connect people with our investment insights.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Extended Team */}
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 border rounded-lg">
+                  <h5 className="font-medium mb-1">Editorial Team</h5>
+                  <p className="text-sm text-muted-foreground">Experienced editors and market analysts who ensure content quality and accuracy.</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h5 className="font-medium mb-1">Student Contributors</h5>
+                  <p className="text-sm text-muted-foreground">Talented students who bring fresh perspectives to financial analysis.</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h5 className="font-medium mb-1">Investment Club</h5>
+                  <p className="text-sm text-muted-foreground">A dedicated group that curates our community watchlist and provides market insights.</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h5 className="font-medium mb-1">Advisory Board</h5>
+                  <p className="text-sm text-muted-foreground">Industry professionals who guide our editorial standards and strategic direction.</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
       <section className="space-y-10"><Card><CardHeader><CardTitle className="flex items-center space-x-2"><Shield className="h-6 w-6 text-secondary" /><span>Editorial Standards</span></CardTitle></CardHeader><CardContent className="space-y-6"><p className="text-muted-foreground leading-relaxed">We maintain high editorial standards to ensure our content is accurate, balanced, and educational. All articles undergo thorough fact-checking and editorial review before publication.</p><div className="space-y-3"><div className="flex items-start space-x-3"><div className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0"></div><div><h5 className="font-medium">Accuracy & Verification</h5><p className="text-sm text-muted-foreground">All facts and figures are verified through multiple sources</p></div></div><div className="flex items-start space-x-3"><div className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0"></div><div><h5 className="font-medium">Editorial Independence</h5><p className="text-sm text-muted-foreground">Our content is free from external influence and commercial bias</p></div></div><div className="flex items-start space-x-3"><div className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0"></div><div><h5 className="font-medium">Educational Focus</h5><p className="text-sm text-muted-foreground">All content serves an educational purpose and avoids speculation</p></div></div><div className="flex items-start space-x-3"><div className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0"></div><div><h5 className="font-medium">Student Mentorship</h5><p className="text-sm text-muted-foreground">Student contributors receive guidance and editorial support</p></div></div></div></CardContent></Card></section>
       <section className="space-y-10"><Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800"><CardHeader><CardTitle className="text-amber-800 dark:text-amber-200">Important Disclaimers</CardTitle></CardHeader><CardContent className="space-y-4 text-amber-900 dark:text-amber-100"><div className="space-y-3"><p className="font-medium">Educational Content Only</p><p className="text-sm">All content on The Mane Review is provided for educational and informational purposes only. Nothing on this site should be considered as financial, investment, or professional advice.</p></div><Separator className="bg-amber-200 dark:bg-amber-800" /><div className="space-y-3"><p className="font-medium">Not Financial Advice</p><p className="text-sm">We do not provide personalised investment advice or recommendations. Always consult with a qualified financial advisor before making investment decisions. Past performance does not guarantee future results.</p></div><Separator className="bg-amber-200 dark:bg-amber-800" /><div className="space-y-3"><p className="font-medium">Market Data</p><p className="text-sm">Market data and prices are provided for informational purposes and may be delayed. We are not responsible for any trading decisions made based on this information.</p></div></CardContent></Card></section>
       <section className="space-y-10"><Card><CardHeader><CardTitle className="flex items-center space-x-2"><Mail className="h-6 w-6 text-secondary" /><span>Contact Us</span></CardTitle></CardHeader><CardContent className="space-y-6"><p className="text-muted-foreground">We'd love to hear from you. Whether you have questions, feedback, or ideas for collaboration, don't hesitate to reach out.</p><div className="grid md:grid-cols-2 gap-4"><div className="space-y-3"><h5 className="font-medium">General Enquiries</h5><a href="mailto:admin@themanereview.com" className="flex items-center gap-2 p-3 border rounded-lg hover:bg-muted/50 transition-colors"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-sm">admin@themanereview.com</span></a></div><div className="space-y-3"><h5 className="font-medium">Article Submissions & Joining Our Team</h5><a href="mailto:admin@themanereview.com" className="flex items-center gap-2 p-3 border rounded-lg hover:bg-muted/50 transition-colors"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-sm">admin@themanereview.com</span></a><p className="text-xs text-muted-foreground">Contact us to submit articles or join The Mane Review</p></div></div></CardContent></Card></section>
