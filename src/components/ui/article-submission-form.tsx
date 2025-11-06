@@ -353,6 +353,16 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
+      // Determine status based on context
+      let articleStatus: 'draft' | 'review' | 'published' | 'rejected';
+      if (existingArticle && (userRole === 'Admin' || userRole === 'Editor')) {
+        // Admin/Editor editing - keep current status
+        articleStatus = existingArticle.status as any;
+      } else {
+        // Regular user submission
+        articleStatus = (saveAsDraft ? 'draft' : 'review') as 'draft' | 'review';
+      }
+
       const articleData = {
         title: formData.title,
         excerpt: formData.excerpt || generateExcerpt(formData.body),
@@ -367,7 +377,7 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
         author_role: (userRole === 'Admin' || userRole === 'Editor') ? userRole : 'Student',
         submission_notes: formData.submission_notes,
         est_read_min: estimateReadingTime(formData.body),
-        status: (saveAsDraft ? 'draft' : 'review') as 'draft' | 'review'
+        status: articleStatus
       } as Partial<DatabaseArticle>;
 
       console.log('[ArticleSubmissionForm] Submitting article with AI image request:', {
@@ -429,13 +439,21 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
   }, {} as Record<string, SubmissionGuideline[]>);
 
   if (success) {
+    const isEditing = !!existingArticle;
+    const isAdminEdit = isEditing && (userRole === 'Admin' || userRole === 'Editor');
+    
     return (
       <Card className="w-full">
         <CardContent className="p-8 text-center">
           <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Article Submitted Successfully!</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            {isAdminEdit ? 'Article Updated Successfully!' : 'Article Submitted Successfully!'}
+          </h3>
           <p className="text-muted-foreground mb-4">
-            Your article has been submitted for review. You'll receive an email notification when it's reviewed.
+            {isAdminEdit 
+              ? 'Your changes have been saved and the article has been updated.'
+              : 'Your article has been submitted for review. You\'ll receive an email notification when it\'s reviewed.'
+            }
           </p>
           <Button onClick={onSuccess}>Continue</Button>
         </CardContent>
@@ -804,19 +822,30 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
                   Cancel
                 </Button>
               )}
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={(e) => handleSubmit(e, true)}
-                disabled={loading}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save as Draft
-              </Button>
-              <Button type="submit" disabled={loading}>
-                <Upload className="h-4 w-4 mr-2" />
-                {loading ? 'Submitting...' : 'Submit for Review'}
-              </Button>
+              {/* Admin/Editor editing existing article - just Save */}
+              {existingArticle && (userRole === 'Admin' || userRole === 'Editor') ? (
+                <Button type="submit" disabled={loading}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              ) : (
+                <>
+                  {/* Regular user submission flow */}
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={(e) => handleSubmit(e, true)}
+                    disabled={loading}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save as Draft
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {loading ? 'Submitting...' : 'Submit for Review'}
+                  </Button>
+                </>
+              )}
             </div>
           </form>
         </CardContent>
