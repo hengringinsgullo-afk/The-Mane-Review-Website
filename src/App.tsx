@@ -17,6 +17,7 @@ import { AuthTest } from './components/pages/AuthTest';
 import { AccountPage } from './components/pages/AccountPage';
 import { AuthDebug } from './components/pages/AuthDebug';
 import { SubmitArticlePage } from './components/pages/SubmitArticlePage';
+import { EditArticlePage } from './components/pages/EditArticlePage';
 import { Toaster } from './components/ui/sonner';
 import { authHelpers, userOperations, supabase } from './lib/supabase';
 import { getCurrentUserWithProfile } from './lib/auth-utils';
@@ -24,7 +25,7 @@ import { toast } from 'sonner';
 import type { Region } from './lib/types';
 import { addDeviceClasses, optimizeIOSViewport, logDeviceInfo, onOrientationChange } from './utils/device-detection';
 
-type Page = 'home' | 'markets' | 'opinion' | 'watchlist' | 'about' | 'article' | 'auth' | 'admin' | 'authtest' | 'account' | 'authdebug' | 'submit-article';
+type Page = 'home' | 'markets' | 'opinion' | 'watchlist' | 'about' | 'article' | 'auth' | 'admin' | 'authtest' | 'account' | 'authdebug' | 'submit-article' | 'edit-article';
 
 interface NavEntry {
   page: Page;
@@ -61,6 +62,8 @@ const resolvePage = (target: string): Page => {
       return 'authdebug';
     case 'submit-article':
       return 'submit-article';
+    case 'edit-article':
+      return 'edit-article';
     default:
       return 'home';
   }
@@ -439,10 +442,12 @@ export default function App() {
           <MarketsPage
             onNavigate={handleNavigate}
             region={currentEntry.data?.region as Region | undefined}
+            userRole={userProfile?.role}
+            onEditArticle={(articleId) => handleNavigate('edit-article', { articleId })}
           />
         );
       case 'opinion':
-        return <OpinionPage onNavigate={handleNavigate} user={userProfile} />;
+        return <OpinionPage onNavigate={handleNavigate} user={userProfile} userRole={userProfile?.role} onEditArticle={(articleId) => handleNavigate('edit-article', { articleId })} />;
       case 'watchlist':
         return <WatchlistPage onNavigate={handleNavigate} user={userProfile} />;
       case 'about':
@@ -477,8 +482,19 @@ export default function App() {
         return <AuthDebug />;
       case 'submit-article':
         return <SubmitArticlePage onNavigate={handleNavigate} user={userProfile} />;
+      case 'edit-article':
+        return (
+          <EditArticlePage
+            articleId={currentEntry.data?.articleId ?? ''}
+            userId={userProfile?.id}
+            userName={userProfile?.name}
+            userRole={userProfile?.role}
+            onNavigate={handleNavigate}
+            onBack={handleBack}
+          />
+        );
       default:
-        return <HomePage onNavigate={handleNavigate} />;
+        return <HomePage onNavigate={handleNavigate} userRole={userProfile?.role} onEditArticle={(articleId) => handleNavigate('edit-article', { articleId })} />;
     }
   };
 

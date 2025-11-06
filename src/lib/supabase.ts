@@ -238,6 +238,17 @@ export const articleOperations = {
       .eq('id', id);
     
     if (error) throw error;
+  },
+
+  async getArticleById(id: string) {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return { data, error: null };
   }
 };
 

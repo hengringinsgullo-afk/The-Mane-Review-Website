@@ -9,9 +9,9 @@ import { MarketIndex, Article } from '../../lib/types';
 import { MarketDataService, fallbackIndex } from '../../lib/market-api';
 import { supabase } from '../../lib/supabase';
 
-interface HomePageProps { onNavigate: (page: string, data?: any) => void; }
+interface HomePageProps { onNavigate: (page: string, data?: any) => void; userRole?: string; onEditArticle?: (articleId: string) => void; }
 
-export function HomePage({ onNavigate }: HomePageProps) {
+export function HomePage({ onNavigate, userRole, onEditArticle }: HomePageProps) {
   const [sampleIndices, setSampleIndices] = useState<MarketIndex[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [latestArticles, setLatestArticles] = useState<Article[]>([]);
@@ -71,7 +71,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           <h2 className="text-3xl font-bold text-primary" style={{ fontFamily: 'var(--font-headline)' }}>Newest Articles</h2>
           <Button variant="ghost" onClick={() => onNavigate('markets')} className="text-secondary hover:text-secondary/80">View all<ChevronRight className="ml-2 h-4 w-4" /></Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{latestArticles.map((article) => (<ArticleCard key={article.id} article={article} onClick={(slug) => onNavigate('article', { slug })} />))}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{latestArticles.map((article) => (<ArticleCard key={article.id} article={article} onClick={(slug) => onNavigate('article', { slug })} userRole={userRole} onEdit={onEditArticle} />))}</div>
       </section>
       <section className="container mx-auto px-4 pt-16">
         <div className="flex items-center justify-between mb-8">
@@ -82,7 +82,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </div>
           <Button variant="ghost" onClick={() => onNavigate('opinion')} className="text-secondary hover:text-secondary/80">View all<ChevronRight className="ml-2 h-4 w-4" /></Button>
         </div>
-        {opinionArticles.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{opinionArticles.map((article) => (<ArticleCard key={article.id} article={article} onClick={(slug) => onNavigate('article', { slug })} showRegion={false} />))}</div>) : (<Card className="p-8 text-center"><CardContent><p className="text-muted-foreground">Student opinion pieces coming soon. Check back for fresh perspectives from our contributors.</p></CardContent></Card>)}
+        {opinionArticles.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{opinionArticles.map((article) => (<ArticleCard key={article.id} article={article} onClick={(slug) => onNavigate('article', { slug })} showRegion={false} userRole={userRole} onEdit={onEditArticle} />))}</div>) : (<Card className="p-8 text-center"><CardContent><p className="text-muted-foreground">Student opinion pieces coming soon. Check back for fresh perspectives from our contributors.</p></CardContent></Card>)}
       </section>
     </div>
   );

@@ -11,12 +11,14 @@ import type { Article } from '../../lib/types';
 
 interface OpinionPageProps { 
   onNavigate: (page: string, data?: any) => void; 
-  user?: any; 
+  user?: any;
+  userRole?: string;
+  onEditArticle?: (articleId: string) => void;
 }
 
 type SortOption = 'latest' | 'popular';
 
-export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
+export function OpinionPage({ onNavigate, user, userRole, onEditArticle }: OpinionPageProps) {
   const [sortBy, setSortBy] = useState<SortOption>('latest');
   const [showAll, setShowAll] = useState(false);
   const [publishedArticles, setPublishedArticles] = useState<Article[]>([]);
@@ -136,7 +138,9 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
               <div key={article.id} className="relative group">
                 <ArticleCard 
                   article={article} 
-                  onClick={(slug) => onNavigate('article', { slug })} 
+                  onClick={(slug) => onNavigate('article', { slug })}
+                  userRole={userRole}
+                  onEdit={onEditArticle}
                 />
                 {isAdmin && (
                   <Button
