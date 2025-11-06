@@ -93,16 +93,16 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
               <div className="grid gap-6">
                 <div className="bg-muted/30 p-6 rounded-lg">
                   <h4 className="text-lg font-semibold mb-2">Henrique Gullo</h4>
-                  <Badge className="mb-3">Founder and Director</Badge>
+                  <Badge className="mb-3">Founder and Executive Director</Badge>
                   <p className="text-muted-foreground leading-relaxed">
-                    Henrique Gullo is the founder of The Mane Review, leading its strategy, website development, and editorial coordination. He guides the team's operations and drives new ideas to help students explore markets and share financial insights with clarity and confidence.
+                    Henrique is responsible for guiding the strategic vision and overall direction of The Mane Review. His role encompasses leading the editorial process, driving website development, and shaping the platform's future. He is not solely a Leader, but a part of the team because he, and The Mane Review, understand that this is all only possible through collaboration.
                   </p>
                 </div>
                 <div className="bg-muted/30 p-6 rounded-lg">
                   <h4 className="text-lg font-semibold mb-2">Leo Gaz</h4>
                   <Badge className="mb-3">Founder and Director</Badge>
                   <p className="text-muted-foreground leading-relaxed">
-                    Leo oversees the day-to-day editorial operations at The Mane Review, ensuring content quality and consistency across all publications. His experience gained through various internships provides valuable industry insights that help guide our editorial direction and mentor our team of contributors in delivering insightful and educational content to our readers.
+                    Leo is responsible for ensuring efficient operation of The Mane Review. His role encompasses overseeing the editorial process, maintaining the functionality of the website, and providing direction for the platform. He is not solely a Leader, but a part of the team because he, and The Mane Review, understand that this is all only possible through collaboration.
                   </p>
                 </div>
               </div>
