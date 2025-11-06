@@ -119,6 +119,13 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                     Ana Clara manages The Mane Review's Instagram presence, overseeing social media strategy and community engagement. With a keen eye for design and content creation, she ensures our online content makes finance accessible and engaging. She also helps bring The Mane Review to more readers, using creativity and consistency to connect people with our investment insights.
                   </p>
                 </div>
+                <div className="bg-muted/30 p-6 rounded-lg">
+                  <h4 className="text-lg font-semibold mb-2">Max Cunningham</h4>
+                  <Badge className="mb-3">Operations & User Experience</Badge>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Max oversees operations and user experience for The Mane Review, ensuring that users remain engaged, informed, and connected to the publication's purpose. He manages the platform's functionality and content flow, fostering an interactive environment where finance enthusiasts can easily access, share, and contribute insightful articles.
+                  </p>
+                </div>
               </div>
             </div>
 
