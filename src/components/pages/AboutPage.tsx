@@ -20,36 +20,36 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="prose prose-gray dark:prose-invert max-w-none">
-              <p className="text-muted-foreground leading-relaxed">
+            <div className="prose prose-gray dark:prose-invert max-w-none space-y-6">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 We started The Mane Review because it became too evident how little people seemed to understand economics and how it affects their daily lives. Whenever a topic like inflation, unemployment, or government budgets came up, people would either change the subject or repeat something they'd heard online but hadn't clearly understood, which was even clearer when you asked them a follow-up.
               </p>
               
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 We saw this not as a lack of intelligence or interest, but as a lack of access; our peers didn't know where to start. Economics felt surreal, restricted to professionals and theory in the IB. However, it was evident to everyone that it shaped everything around us—from the cost of groceries to the opportunities we could pursue.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 The more we talked about it, the more we realized that economic illiteracy was everywhere. Friends didn't understand what interest rates actually meant for their families. Classmates could tell us what GDP is, but not comment on Brazil's. We realized people wanted to understand, but most sources were too technical or political. We knew something had to be done.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 We didn't want to create another generic school newspaper that just summarized headlines, though. Our idea revolved around something that explained economics clearly and fairly, connecting theory to real life.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 That idea eventually became The Mane Review. Students were finally allowed to enter a world where they could understand the financial decisions that now matter more than ever. At first, we weren't sure where to begin. None of us were journalists or economists. But what started as curiosity led to a newfound sense of responsibility. We started by picking one topic at a time and researching it deeply. Every article was written with the same goal—to make readers think, "Oh, that's why/how it works."
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 Through The Mane Review, we also learned about responsibility in journalism. We had to verify every statistic, check multiple sources, and avoid sensationalism. We saw how easy it was for economic topics to become politicized, and we consciously decided to focus on facts and explanations, veering away from pure opinion. Said discipline led to trust. Readers knew that even if they disagreed with an interpretation, they could rely on our reporting to be accurate and fair.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 We also discovered how economics connects to everything else—politics, education, healthcare, technology, and even climate change. Understanding one helped explain the other. That's why our coverage gradually expanded beyond pure financial topics to include broader economic implications. We wanted to show that economics isn't just about money—about choices, priorities, and systems that shape society.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 Looking back, starting The Mane Review taught us as much as it taught our readers. We learned how to work together, manage deadlines, edit constructively, and present information in a way that informs rather than overwhelms. We also learned that curiosity is contagious. Once people understand how the economy works, they want to know more and question what they read elsewhere. Every article we publish is one small step toward a more informed community, where people can make better decisions for themselves and others.
               </p>
 
