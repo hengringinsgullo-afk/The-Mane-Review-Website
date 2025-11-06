@@ -8,7 +8,7 @@ import { Badge } from './badge';
 import { Alert, AlertDescription } from './alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 import { Label } from './label';
-import { PenTool, Upload, CheckCircle2, AlertCircle, Eye, Save, Sparkles, Loader2 } from 'lucide-react';
+import { PenTool, Upload, CheckCircle2, AlertCircle, Eye, Save, Sparkles, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import { articleOperations, guidelinesOperations, supabase, type DatabaseArticle } from '../../lib/supabase';
 import { generateArticleMetadata, isGeminiConfigured } from '../../lib/gemini-content-service';
 import { toast } from 'sonner';
@@ -55,6 +55,9 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
   const [generatingMetadata, setGeneratingMetadata] = useState(false);
   const [generatingTitle, setGeneratingTitle] = useState(false);
   const [generatingTags, setGeneratingTags] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     const words = formData.body.trim().split(/\s+/).length;
@@ -80,6 +83,82 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
       [field]: value
     }));
     setError(null);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (JPG, PNG, WebP)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(`Image is too large (${fileSizeMB}MB). Maximum size is 5MB`);
+      return;
+    }
+
+    toast.success(`Image selected: ${file.name} (${fileSizeMB}MB)`);
+    setUploadedImage(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // If user uploads an image, disable AI generation
+    if (requestAiImage) {
+      setRequestAiImage(false);
+      toast.info('Switched to manual image upload');
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setImagePreview(null);
+    toast.info('Image removed. You can upload a new one or use AI generation.');
+  };
+
+  const uploadImageToStorage = async (articleSlug: string): Promise<string | null> => {
+    if (!uploadedImage) return null;
+
+    setUploadingImage(true);
+    try {
+      const fileName = `ai-generated/${articleSlug}.png`;
+      
+      // Convert image to PNG if needed
+      const imageBuffer = await uploadedImage.arrayBuffer();
+      
+      const { data, error } = await supabase.storage
+        .from('article-images')
+        .upload(fileName, imageBuffer, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Image upload error:', error);
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('article-images')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      toast.error('Failed to upload image');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const validateForm = () => {
@@ -280,8 +359,8 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
         body: formData.body,
         region: formData.region,
         category: formData.category,
-        request_ai_image: requestAiImage,
-        ai_image_status: requestAiImage ? ('pending' as const) : null,
+        request_ai_image: requestAiImage && !uploadedImage, // Only request AI if no manual upload
+        ai_image_status: (requestAiImage && !uploadedImage) ? ('pending' as const) : null,
         tags: tagsArray,
         author_name: formData.author_name,
         author_id: userProfile.id, // Use users.id (foreign key to users table)
@@ -292,15 +371,34 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
       } as Partial<DatabaseArticle>;
 
       console.log('[ArticleSubmissionForm] Submitting article with AI image request:', {
-        request_ai_image: requestAiImage,
-        ai_image_status: requestAiImage ? 'pending' : null,
+        request_ai_image: requestAiImage && !uploadedImage,
+        ai_image_status: (requestAiImage && !uploadedImage) ? 'pending' : null,
+        has_uploaded_image: !!uploadedImage,
         title: articleData.title
       });
 
+      let submittedArticle;
       if (existingArticle) {
-        await articleOperations.updateArticle(existingArticle.id, articleData);
+        submittedArticle = await articleOperations.updateArticle(existingArticle.id, articleData);
       } else {
-        await articleOperations.submitArticle(articleData);
+        submittedArticle = await articleOperations.submitArticle(articleData);
+      }
+
+      // Upload image if provided
+      if (uploadedImage && submittedArticle) {
+        console.log('[ArticleSubmissionForm] Uploading user image...');
+        toast.info('Uploading your image to storage...');
+        
+        const imageUrl = await uploadImageToStorage(submittedArticle.slug);
+        
+        if (imageUrl) {
+          // Update article with cover image URL
+          await articleOperations.updateArticle(submittedArticle.id, {
+            cover_image: imageUrl
+          });
+          console.log('[ArticleSubmissionForm] Image uploaded successfully:', imageUrl);
+          toast.success('Image uploaded successfully!');
+        }
       }
 
       console.log('[ArticleSubmissionForm] Article submitted successfully!');
@@ -594,31 +692,109 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
               />
             </div>
 
-            {/* AI Image Generation Option */}
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="pt-6">
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="request_ai_image"
-                    checked={requestAiImage}
-                    onChange={(e) => setRequestAiImage(e.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor="request_ai_image" className="cursor-pointer font-semibold">
-                      ✨ Generate Featured Image with AI
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Our AI will automatically create a professional, custom image for your article after it's approved for publication. 
-                      The image will be generated using Google's Gemini AI based on your article's content.
-                    </p>
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      <span className="font-medium">How it works:</span> After editorial approval, our AI analyses your article 
-                      and generates a unique, high-quality featured image that captures the essence of your content.
+            {/* Image Upload Section */}
+            <Card className="border-primary/20 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+              <CardContent className="pt-6 space-y-4">
+                <div>
+                  <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Featured Image
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Choose how you want to add a featured image to your article
+                  </p>
+                </div>
+
+                {/* Manual Upload Option */}
+                <div className="space-y-3">
+                  <Label className="font-semibold">Upload Your Own Image</Label>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage || !!uploadedImage}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Recommended: 1200x630px, max 5MB. Supports JPG, PNG, WebP
+                      </p>
                     </div>
                   </div>
+
+                  {/* Image Preview with Success Message */}
+                  {imagePreview && (
+                    <div className="space-y-3">
+                      <Alert className="bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-green-800 dark:text-green-200">
+                          <strong>Image uploaded successfully!</strong> Your custom image will be used as the featured image for this article.
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="relative inline-block">
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          className="max-w-full md:max-w-md rounded-lg border-2 border-green-500/50 shadow-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 shadow-lg"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                        <div className="absolute bottom-2 left-2 bg-black/70 text-white px-3 py-1 rounded-md text-xs">
+                          {uploadedImage?.name}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Divider */}
+                {!uploadedImage && (
+                  <>
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or</span>
+                      </div>
+                    </div>
+
+                    {/* AI Generation Option */}
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        id="request_ai_image"
+                        checked={requestAiImage}
+                        onChange={(e) => setRequestAiImage(e.target.checked)}
+                        disabled={!!uploadedImage}
+                        className="mt-1 h-4 w-4 rounded border-gray-300"
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="request_ai_image" className="cursor-pointer font-semibold">
+                          ✨ Generate Featured Image with AI
+                        </Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Our AI will automatically create a professional, custom image for your article after it's approved for publication. 
+                          The image will be generated using Google's Gemini AI based on your article's content.
+                        </p>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          <span className="font-medium">How it works:</span> After editorial approval, our AI analyses your article 
+                          and generates a unique, high-quality featured image that captures the essence of your content.
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
