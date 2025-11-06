@@ -26,7 +26,7 @@ export function AuthDebug() {
       const startTime = Date.now();
       
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'henriquegullo@themanereview.com',
+        email: 'admin@themanereview.com',
         password: 'H3nr1qu3'
       });
       

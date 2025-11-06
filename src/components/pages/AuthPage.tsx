@@ -129,7 +129,7 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
     setError(null);
     try {
       let metadata: any = { full_name: formData.fullName };
-      if (formData.email !== 'henriquegullo@themanereview.com') {
+      if (formData.email !== 'admin@themanereview.com') {
         metadata = { full_name: formData.fullName, phone_number: formData.phoneNumber, date_of_birth: formData.dateOfBirth, role: 'Student' };
       }
       const { data, error } = await authHelpers.signUp(formData.email.trim(), formData.password, metadata);
@@ -139,7 +139,7 @@ export function AuthPage({ onAuthSuccess, onNavigate, defaultTab = 'login' }: Au
         else if (error.message.includes('Invalid email')) throw new Error('Please enter a valid email address.');
         throw error;
       }
-      setSuccess(formData.email === 'henriquegullo@themanereview.com' ? 'Admin account created!' : 'Account created! Check your email to verify.');
+      setSuccess(formData.email === 'admin@themanereview.com' ? 'Admin account created!' : 'Account created! Check your email to verify.');
       setActiveTab('login');
       setFormData({ email: '', password: '', confirmPassword: '', fullName: '', phoneNumber: '', dateOfBirth: '', isStPaulsMember: false, memberType: '', studentForm: '' });
     } catch (err) {

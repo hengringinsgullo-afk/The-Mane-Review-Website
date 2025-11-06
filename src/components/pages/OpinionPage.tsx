@@ -241,9 +241,9 @@ export function OpinionPage({ onNavigate, user }: OpinionPageProps) {
                   <p className="text-sm text-muted-foreground mb-3">
                     To submit articles or join The Mane Review team, please sign in or contact:
                   </p>
-                  <a href="mailto:hg3@stpauls.br" className="text-primary font-medium hover:underline flex items-center gap-2">
+                  <a href="mailto:admin@themanereview.com" className="text-primary font-medium hover:underline flex items-center gap-2">
                     <ExternalLink className="h-4 w-4" />
-                    hg3@stpauls.br
+                    admin@themanereview.com
                   </a>
                   <p className="text-xs text-muted-foreground mt-3">
                     We'll guide you through the submission process and answer any questions.

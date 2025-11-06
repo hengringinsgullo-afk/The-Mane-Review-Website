@@ -82,7 +82,7 @@ export function AuthTest() {
       
       // Test with minimal data first
       const { data, error } = await supabase.auth.signUp({
-        email: 'henriquegullo@themanereview.com',
+        email: 'admin@themanereview.com',
         password: 'H3nr1qu3',
         options: {
           data: {
@@ -111,7 +111,7 @@ export function AuthTest() {
       
       console.log('Testing admin bypass...');
       const result = await adminBypass.checkAdminCredentials(
-        'henriquegullo@themanereview.com',
+        'admin@themanereview.com',
         'H3nr1qu3'
       );
       
