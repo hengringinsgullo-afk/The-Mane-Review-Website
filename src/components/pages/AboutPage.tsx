@@ -95,7 +95,7 @@ export function AboutPage({ onNavigate }: AboutPageProps) {
                   <h4 className="text-lg font-semibold mb-2">Henrique Gullo</h4>
                   <Badge className="mb-3">Founder and Director</Badge>
                   <p className="text-muted-foreground leading-relaxed">
-                    Henrique founded The Mane Review with a vision to make financial markets more accessible to everyone. With a passion for education and a deep understanding of global markets, he leads our editorial team in creating content that bridges the gap between academic finance and practical investing knowledge.
+                    Henrique Gullo is the founder of The Mane Review, leading its strategy, website development, and editorial coordination. He guides the team's operations and drives new ideas to help students explore markets and share financial insights with clarity and confidence.
                   </p>
                 </div>
                 <div className="bg-muted/30 p-6 rounded-lg">
