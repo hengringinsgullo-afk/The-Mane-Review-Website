@@ -360,15 +360,19 @@ export default function App() {
     setIsLoading(false);
   };
 
+  const handleBack = () => {
+    if (navIndex > 0) {
+      setNavIndex(navIndex - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleNavigate = (page: string, data?: NavEntry['data']) => {
     console.log('[App] handleNavigate called with:', page, data);
 
     // Handle back navigation
     if (page === 'back') {
-      if (navIndex > 0) {
-        setNavIndex(navIndex - 1);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      handleBack();
       return;
     }
 
