@@ -49,12 +49,12 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
     return body.split('\n\n').map((block, i) => {
       const trimmed = block.trim();
       
-      // Main Heading (H1) - Reduced size, responsive
+      // Main Heading (H1) - Large, editorial style with generous spacing
       if (trimmed.startsWith('# ')) {
         return (
           <h1 
             key={i} 
-            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 mt-8 text-primary leading-tight" 
+            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 mt-16 first:mt-0 text-primary leading-tight tracking-tight" 
             style={{ fontFamily: 'var(--font-headline)' }}
           >
             {trimmed.replace('# ', '')}
@@ -62,12 +62,12 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
         );
       }
       
-      // Section Heading (H2) - Professional subheading, smaller
+      // Section Heading (H2) - Professional subheading with breathing room
       if (trimmed.startsWith('## ')) {
         return (
           <h2 
             key={i} 
-            className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 mt-6 text-primary leading-snug border-l-4 border-primary pl-4" 
+            className="text-xl sm:text-2xl md:text-3xl font-bold mb-6 mt-12 text-primary leading-snug border-l-4 border-primary pl-6 py-2" 
             style={{ fontFamily: 'var(--font-headline)' }}
           >
             {trimmed.replace('## ', '')}
@@ -80,7 +80,7 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
         return (
           <h3 
             key={i} 
-            className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 mt-5 text-secondary" 
+            className="text-lg sm:text-xl md:text-2xl font-semibold mb-5 mt-10 text-secondary leading-snug" 
             style={{ fontFamily: 'var(--font-headline)' }}
           >
             {trimmed.replace('### ', '')}
@@ -88,24 +88,24 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
         );
       }
       
-      // Minor Heading (H4) - Smaller emphasis
+      // Minor Heading (H4) - Smaller emphasis with good spacing
       if (trimmed.startsWith('#### ')) {
         return (
           <h4 
             key={i} 
-            className="text-base sm:text-lg md:text-xl font-semibold mb-3 mt-4 text-foreground"
+            className="text-base sm:text-lg md:text-xl font-semibold mb-4 mt-8 text-foreground"
           >
             {trimmed.replace('#### ', '')}
           </h4>
         );
       }
       
-      // Blockquote - Styled quote with controlled size
+      // Blockquote - Styled quote with generous padding
       if (trimmed.startsWith('> ')) {
         return (
           <blockquote 
             key={i} 
-            className="border-l-4 border-secondary pl-4 py-3 my-6 italic text-sm sm:text-base text-muted-foreground bg-muted/30 rounded-r-lg break-words"
+            className="border-l-4 border-secondary pl-6 py-5 my-10 italic text-sm sm:text-base text-muted-foreground bg-muted/30 rounded-r-lg break-words"
           >
             {trimmed.replace('> ', '')}
           </blockquote>
@@ -117,11 +117,12 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
         .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-primary">$1</strong>')
         .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>');
       
-      // Regular paragraph - Professional body text with controlled size
+      // Regular paragraph - Professional body text with excellent line height and spacing
       return (
         <p 
           key={i} 
-          className="mb-5 leading-relaxed text-base text-foreground/90 break-words"
+          className="mb-7 leading-loose text-base text-foreground/90 break-words"
+          style={{ lineHeight: '1.8' }}
           dangerouslySetInnerHTML={{ __html: processedText }}
         />
       );
