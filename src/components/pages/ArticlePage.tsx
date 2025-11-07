@@ -45,12 +45,88 @@ export function ArticlePage({ slug, onNavigate }: ArticlePageProps) {
 
   const formatDate = (date: Date) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
   const getRegionColor = (region: string) => ({ Brazil: 'bg-green-100 text-green-800', USA: 'bg-blue-100 text-blue-800', Europe: 'bg-purple-100 text-purple-800', Asia: 'bg-orange-100 text-orange-800' }[region] || 'bg-gray-100 text-gray-800');
-  const renderContent = (body: string) => body.split('\n\n').map((p, i) => {
-    if (p.startsWith('# ')) return (<h1 key={i} className="text-4xl font-bold mb-8 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('# ', '')}</h1>);
-    if (p.startsWith('## ')) return (<h2 key={i} className="text-3xl font-bold mb-6 text-primary" style={{ fontFamily: 'var(--font-headline)' }}>{p.replace('## ', '')}</h2>);
-    if (p.startsWith('### ')) return (<h3 key={i} className="text-2xl font-semibold mb-4 text-primary">{p.replace('### ', '')}</h3>);
-    return (<p key={i} className="mb-6 leading-relaxed text-foreground">{p}</p>);
-  });
+  const renderContent = (body: string) => {
+    return body.split('\n\n').map((block, i) => {
+      const trimmed = block.trim();
+      
+      // Main Heading (H1) - Reduced size, responsive
+      if (trimmed.startsWith('# ')) {
+        return (
+          <h1 
+            key={i} 
+            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 mt-8 text-primary leading-tight" 
+            style={{ fontFamily: 'var(--font-headline)' }}
+          >
+            {trimmed.replace('# ', '')}
+          </h1>
+        );
+      }
+      
+      // Section Heading (H2) - Professional subheading, smaller
+      if (trimmed.startsWith('## ')) {
+        return (
+          <h2 
+            key={i} 
+            className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 mt-6 text-primary leading-snug border-l-4 border-primary pl-4" 
+            style={{ fontFamily: 'var(--font-headline)' }}
+          >
+            {trimmed.replace('## ', '')}
+          </h2>
+        );
+      }
+      
+      // Subsection Heading (H3) - Elegant tertiary heading
+      if (trimmed.startsWith('### ')) {
+        return (
+          <h3 
+            key={i} 
+            className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 mt-5 text-secondary" 
+            style={{ fontFamily: 'var(--font-headline)' }}
+          >
+            {trimmed.replace('### ', '')}
+          </h3>
+        );
+      }
+      
+      // Minor Heading (H4) - Smaller emphasis
+      if (trimmed.startsWith('#### ')) {
+        return (
+          <h4 
+            key={i} 
+            className="text-base sm:text-lg md:text-xl font-semibold mb-3 mt-4 text-foreground"
+          >
+            {trimmed.replace('#### ', '')}
+          </h4>
+        );
+      }
+      
+      // Blockquote - Styled quote with controlled size
+      if (trimmed.startsWith('> ')) {
+        return (
+          <blockquote 
+            key={i} 
+            className="border-l-4 border-secondary pl-4 py-3 my-6 italic text-sm sm:text-base text-muted-foreground bg-muted/30 rounded-r-lg break-words"
+          >
+            {trimmed.replace('> ', '')}
+          </blockquote>
+        );
+      }
+      
+      // Bold text emphasis
+      const processedText = trimmed
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-primary">$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>');
+      
+      // Regular paragraph - Professional body text with controlled size
+      return (
+        <p 
+          key={i} 
+          className="mb-5 leading-relaxed text-base text-foreground/90 break-words"
+          dangerouslySetInnerHTML={{ __html: processedText }}
+        />
+      );
+    });
+  };
 
   if (loading) return (<div className="container mx-auto px-4 py-12"><div className="text-center">Loading...</div></div>);
   if (!article) return (<div className="container mx-auto px-4 py-12"><Card className="p-8 text-center"><CardContent><h2 className="text-2xl font-bold mb-4">Article Not Found</h2><p className="text-muted-foreground mb-4">The article you're looking for doesn't exist.</p><Button onClick={() => onNavigate('home')}>Return Home</Button></CardContent></Card></div>);

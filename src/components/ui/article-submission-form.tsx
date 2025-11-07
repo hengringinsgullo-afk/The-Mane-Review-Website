@@ -650,12 +650,29 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
                 id="body"
                 value={formData.body}
                 onChange={(e) => handleInputChange('body', e.target.value)}
-                placeholder="Write your article content here..."
+                placeholder="Write your article content here...
+
+Use formatting for professional appearance:
+# Main Heading (large title)
+## Section Heading (subheading)
+### Subsection (smaller heading)
+> Quote or important note
+
+**Bold text** for emphasis
+*Italic text* for subtle emphasis
+
+Separate paragraphs with blank lines."
                 rows={15}
                 required
               />
-              <div className="text-xs text-muted-foreground">
-                Recommended: 800-1500 words. Maximum: 2000 words. Current: {wordCount} words
+              <div className="space-y-2">
+                <div className="text-xs text-muted-foreground">
+                  Recommended: 800-1500 words. Maximum: 2000 words. Current: {wordCount} words
+                </div>
+                <div className="text-xs text-primary bg-primary/5 p-3 rounded-md border border-primary/20">
+                  <strong>💡 Formatting Tip:</strong> Use headings (# ## ###) to structure your article with professional typography. 
+                  Headings will appear in beautiful serif fonts with different sizes and styles.
+                </div>
               </div>
             </div>
 
