@@ -11,6 +11,7 @@ import { Label } from './label';
 import { PenTool, Upload, CheckCircle2, AlertCircle, Eye, Save, Sparkles, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import { articleOperations, guidelinesOperations, supabase, type DatabaseArticle } from '../../lib/supabase';
 import { generateArticleMetadata, isGeminiConfigured } from '../../lib/gemini-content-service';
+import { autoFormatArticle, needsFormatting } from '../../lib/auto-format-service';
 import { toast } from 'sonner';
 import type { Region } from '../../lib/types';
 
@@ -363,10 +364,17 @@ export function ArticleSubmissionForm({ userId, userName, userRole, onSuccess, o
         articleStatus = (saveAsDraft ? 'draft' : 'review') as 'draft' | 'review';
       }
 
+      // 🤫 Secret: Auto-format article if needed (only when submitting for review/publishing)
+      let finalBody = formData.body;
+      if (!saveAsDraft && needsFormatting(formData.body)) {
+        console.log('[Submit] 🤫 Secretly enhancing article formatting...');
+        finalBody = await autoFormatArticle(formData.body);
+      }
+
       const articleData = {
         title: formData.title,
         excerpt: formData.excerpt || generateExcerpt(formData.body),
-        body: formData.body,
+        body: finalBody,
         region: formData.region,
         category: formData.category,
         request_ai_image: requestAiImage && !uploadedImage, // Only request AI if no manual upload
